@@ -9,7 +9,12 @@ This PRD defines the features, user flows, and acceptance criteria for the
 Vanguard Bank Connection Demo app. It is written to drive test case generation
 in LambdaTest KaneAI, covering both positive (happy path) and negative
 (error/edge case) scenarios. Automated tests generated from this document
-connect to the running app via LT Tunnel.
+can target either the live hosted URL or a local instance via LT Tunnel.
+
+LINKS
+-----
+  Live App:   https://vanguard-bank-connection-demo-production.up.railway.app
+  GitHub:     https://github.com/skallidah/vanguard-bank-connection-demo
 
 --------------------------------------------------------------------------------
 SECTION 1: APPLICATION OVERVIEW
@@ -29,26 +34,35 @@ API. It uses an Excel file (data.xlsx) as its database, seeded on first run
 from mock-db.json.
 
 --------------------------------------------------------------------------------
-SECTION 2: TUNNEL & BASE URL CONFIGURATION
+SECTION 2: BASE URL CONFIGURATION FOR KANEAI
 --------------------------------------------------------------------------------
 
-The app runs locally on port 5000. LambdaTest's LT Tunnel exposes it to the
-KaneAI cloud under the configured tunnel name.
+OPTION A — Hosted (recommended, no tunnel needed)
+  The app is publicly deployed on Railway. Use this URL directly in KaneAI:
 
-  Local URL:     http://localhost:5000
-  Tunnel URL:    Use the hostname configured when starting LT Tunnel, e.g.
-                 http://<tunnel-name>.ltlocal.com:5000
-                 (replace <tunnel-name> with the actual tunnel identifier)
+  Base URL:  https://vanguard-bank-connection-demo-production.up.railway.app
 
-Starting the app:
-  python app.py            (default, port 5000)
-  FLASK_DEBUG=true python app.py   (with auto-reload)
+  Note: The Railway database (data.xlsx) resets to seed data on each
+  deployment. Pre-seeded draft IDs (draft_001 through draft_005) are always
+  available after a fresh deploy.
 
-Starting LT Tunnel (example):
-  ./LT --user <LT_USERNAME> --key <LT_ACCESS_KEY> --tunnel-name vanguard-demo
+OPTION B — Local via LT Tunnel
+  If running the app locally and testing with KaneAI's cloud browsers,
+  expose it via LT Tunnel:
 
-All test cases below should target the tunnel URL so KaneAI's cloud browsers
-can reach the local server.
+  Starting the app:
+    python app.py                       (default, port 5000)
+    FLASK_DEBUG=true python app.py      (with auto-reload)
+
+  Starting LT Tunnel:
+    ./LT --user <LT_USERNAME> --key <LT_ACCESS_KEY> --tunnel-name vanguard-demo
+
+  Tunnel Base URL:
+    Configure the tunnel hostname in LambdaTest as the base URL, e.g.
+    http://localhost:5000 mapped through the tunnel.
+
+All test cases below use {{BASE_URL}} as a placeholder. Substitute with
+the Railway URL (Option A) or the tunnel URL (Option B).
 
 --------------------------------------------------------------------------------
 SECTION 3: PAGES & ROUTES

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add a new bank</title>
+    <link rel="stylesheet" href="assets/styles.css">
+    <style>
+        .error { color: #c00; font-size: 11px; margin-top: 3px; }
+        input.invalid { border: 1px solid #c00 !important; }
+        .form-label .required { color: #c00; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Add a new bank</h1>
+        <h2>Bank information</h2>
+        
+        <div class="flex-row">
+            <div>
+                <div class="form-group">
+                    <div class="form-label">Routing number <span class="required">*</span></div>
+                    <div class="form-input">
+                        <input type="text" id="routingNumber">
+                        <div class="error" id="err-routing"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Bank name</div>
+                    <div class="form-input" id="bankName" style="font-size:12px;">--</div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Account number <span class="required">*</span></div>
+                    <div class="form-input">
+                        <input type="text" id="accountNumber">
+                        <div class="error" id="err-account"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="form-label">Re-enter account number <span class="required">*</span></div>
+                    <div class="form-input">
+                        <input type="text" id="reAccountNumber">
+                        <div class="error" id="err-reaccount"></div>
+                    </div>
+                </div>
+                
+                <div class="form-input" style="margin-left: 50px; margin-top: 10px;">
+                    <div class="form-group">
+                        <div class="form-label" style="width: 150px;">Correspondent routing number</div>
+                        <div class="form-input"><input type="text" id="correspondentRoutingNumber" readonly></div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-label" style="width: 150px;">Correspondent account number</div>
+                        <div class="form-input"><input type="text" id="correspondentAccountNumber" readonly></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="check-image-placeholder">[ Check Image Placeholder ]<br><br>
+                Routing number | Account number
+            </div>
+        </div>
+
+        <hr style="border: 0; border-top: 1px dotted #ccc; margin: 20px 0;">
+
+        <div class="form-group">
+            <div class="form-label">Account type</div>
+            <div class="form-input text-small">
+                <input type="radio" name="acc_type" value="checking" checked> Checking 
+                <input type="radio" name="acc_type" value="savings" style="margin-left: 10px;"> Savings
+            </div>
+        </div>
+
+        <div class="form-group" style="align-items: flex-start;">
+            <div class="form-label">Personal account owner <span class="required">*</span></div>
+            <div class="form-input text-small">
+                <div id="err-owner" class="error" style="margin-bottom:4px;"></div>
+                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                    <div><label>First <span class="required">*</span></label><br><input type="text" id="ownerFirst" style="width:100px;"></div>
+                    <div><label>Middle</label><br><input type="text" style="width:100px;"></div>
+                    <div><label>Last <span class="required">*</span></label><br><input type="text" id="ownerLast" style="width:100px;"></div>
+                    <div><label>Suffix</label><br>
+                        <select style="width:80px; padding:3px;">
+                            <option value="">--</option>
+                            <option>Mr.</option>
+                            <option>Mrs.</option>
+                            <option>Ms.</option>
+                            <option>Miss</option>
+                            <option>Dr.</option>
+                            <option>Prof.</option>
+                            <option>Jr.</option>
+                            <option>Sr.</option>
+                            <option>II</option>
+                            <option>III</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                    <input type="text" style="width:100px;">
+                    <input type="text" style="width:100px;">
+                    <input type="text" style="width:100px;">
+                    <select style="width:80px; padding:3px;">
+                        <option value="">--</option>
+                        <option>Mr.</option>
+                        <option>Mrs.</option>
+                        <option>Ms.</option>
+                        <option>Miss</option>
+                        <option>Dr.</option>
+                        <option>Prof.</option>
+                        <option>Jr.</option>
+                        <option>Sr.</option>
+                        <option>II</option>
+                        <option>III</option>
+                    </select>
+                    <span style="align-self: center;">Remove name 2</span>
+                </div>
+                <div style="color: #666; margin-top: 5px;">+ Add another name</div>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <div class="form-label">Bank nickname<br><span style="font-weight:normal; font-size:11px;">(Optional)</span></div>
+            <div class="form-input">
+                <input type="text" style="width:150px;">
+                <div style="margin-top: 5px; font-size: 12px;">
+                    <input type="checkbox" checked> Make this your primary bank (Optional)
+                </div>
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="index.html" class="btn">CANCEL</a>
+            <div class="right-btns">
+                <a href="authorize.html" class="btn" onclick="callCreateDraft(event)">CONTINUE</a>
+            </div>
+        </div>
+
+        <div class="footer-note">Vanguard Internal Use Only</div>
+
+        <div id="api-log">
+            <h3>API Calls</h3>
+            <ul id="api-log-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        function logApi(method, path) {
+            const li = document.createElement('li');
+            li.textContent = method + ' ' + path;
+            document.getElementById('api-log-list').appendChild(li);
+        }
+
+        // Live routing number lookup
+        document.getElementById('routingNumber').addEventListener('blur', function() {
+            const val = this.value.trim();
+            if (val.length === 9) {
+                fetch('/routing-lookup?routingNumber=' + val)
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('bankName').textContent = data.bankName || 'Not found';
+                        document.getElementById('correspondentRoutingNumber').value = data.correspondentRoutingNumber || '';
+                        document.getElementById('correspondentAccountNumber').value = data.correspondentAccountNumber || '';
+                    })
+                    .catch(() => {});
+            }
+        });
+
+        function validate() {
+            let valid = true;
+
+            const routing = document.getElementById('routingNumber').value.trim();
+            const errRouting = document.getElementById('err-routing');
+            if (!routing) {
+                errRouting.textContent = 'Routing number is required.';
+                document.getElementById('routingNumber').classList.add('invalid');
+                valid = false;
+            } else if (!/^\d{9}$/.test(routing)) {
+                errRouting.textContent = 'Must be exactly 9 digits.';
+                document.getElementById('routingNumber').classList.add('invalid');
+                valid = false;
+            } else {
+                errRouting.textContent = '';
+                document.getElementById('routingNumber').classList.remove('invalid');
+            }
+
+            const acct = document.getElementById('accountNumber').value.trim();
+            const errAcct = document.getElementById('err-account');
+            if (!acct) {
+                errAcct.textContent = 'Account number is required.';
+                document.getElementById('accountNumber').classList.add('invalid');
+                valid = false;
+            } else {
+                errAcct.textContent = '';
+                document.getElementById('accountNumber').classList.remove('invalid');
+            }
+
+            const reAcct = document.getElementById('reAccountNumber').value.trim();
+            const errReAcct = document.getElementById('err-reaccount');
+            if (!reAcct) {
+                errReAcct.textContent = 'Please re-enter account number.';
+                document.getElementById('reAccountNumber').classList.add('invalid');
+                valid = false;
+            } else if (reAcct !== acct) {
+                errReAcct.textContent = 'Account numbers do not match.';
+                document.getElementById('reAccountNumber').classList.add('invalid');
+                valid = false;
+            } else {
+                errReAcct.textContent = '';
+                document.getElementById('reAccountNumber').classList.remove('invalid');
+            }
+
+            const firstName = document.getElementById('ownerFirst').value.trim();
+            const lastName = document.getElementById('ownerLast').value.trim();
+            const errOwner = document.getElementById('err-owner');
+            if (!firstName || !lastName) {
+                errOwner.textContent = 'Owner first and last name are required.';
+                if (!firstName) document.getElementById('ownerFirst').classList.add('invalid');
+                if (!lastName) document.getElementById('ownerLast').classList.add('invalid');
+                valid = false;
+            } else {
+                errOwner.textContent = '';
+                document.getElementById('ownerFirst').classList.remove('invalid');
+                document.getElementById('ownerLast').classList.remove('invalid');
+            }
+
+            return valid;
+        }
+
+        function callCreateDraft(e) {
+            e.preventDefault();
+            if (!validate()) return;
+
+            const routing = document.getElementById('routingNumber').value.trim();
+            const acct = document.getElementById('accountNumber').value.trim();
+            const accType = document.querySelector('input[name=acc_type]:checked').value === 'savings' ? 'SAVINGS' : 'CHECKING';
+            const firstName = document.getElementById('ownerFirst').value.trim();
+            const lastName = document.getElementById('ownerLast').value.trim();
+
+            logApi('POST', '/bff/bank-connections/draft');
+            const corrRouting = document.getElementById('correspondentRoutingNumber').value.trim();
+            const corrAccount = document.getElementById('correspondentAccountNumber').value.trim();
+            fetch('/bff/bank-connections/draft', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    routingNumber: routing,
+                    accountNumber: acct,
+                    accountType: accType,
+                    owners: [{ firstName, lastName }],
+                    ...(corrRouting && { correspondentRoutingNumber: corrRouting }),
+                    ...(corrAccount && { correspondentAccountNumber: corrAccount })
+                })
+            })
+            .then(r => r.json())
+            .then(data => {
+                logApi('\u2713 Response', JSON.stringify(data));
+                sessionStorage.setItem('draftId', data.draftId);
+                window.location.href = 'authorize.html';
+            })
+            .catch(() => window.location.href = 'authorize.html');
+        }
+    </script>
+</body>
+</html>

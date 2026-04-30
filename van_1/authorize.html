@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authorize accounts</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Authorize accounts</h1>
+        <p class="text-small">Verify the bank information you entered and choose the Vanguard accounts you'll use to move money between your bank and Vanguard.</p>
+        
+        <h2>Bank information</h2>
+        <table class="data-table">
+            <tr><th>Bank name</th><td id="bankName"></td></tr>
+            <tr><th>Routing number</th><td id="routingNumber"></td></tr>
+            <tr><th>Account number</th><td id="accountNumber"></td></tr>
+            <tr><th>Account type</th><td id="accountType"></td></tr>
+            <tr><th>Account owners</th><td id="accountOwners"></td></tr>
+            <tr><th>Correspondent routing number</th><td id="correspondentRoutingNumber"></td></tr>
+            <tr><th>Correspondent account number</th><td id="correspondentAccountNumber"></td></tr>
+        </table>
+
+        <h2>Accounts that will be authorized to use this bank account</h2>
+        <p class="text-small">These accounts will be immediately authorized for use because the ownership is identical to your bank account.</p>
+        <div id="autoAccounts" style="margin-left: 200px; font-size: 13px; line-height: 1.6;"></div>
+
+        <h2>Review additional accounts that can be authorized to use this bank</h2>
+        <p class="text-small">The following account(s) don't have identical ownership to the bank account you're adding but are eligible for use after further authorization.</p>
+        <div id="eligibleAccounts" style="margin-left: 200px; font-size: 13px; line-height: 1.6;"></div>
+
+        <div class="action-buttons">
+            <a href="index.html" class="btn">CANCEL</a>
+            <div class="right-btns">
+                <a href="add-bank.html" class="btn">BACK</a>
+                <a href="review.html" class="btn" onclick="callSaveAuthorizations(event)">REVIEW</a>
+            </div>
+        </div>
+
+        <div class="footer-note">Vanguard Internal Use Only</div>
+
+        <div id="api-log">
+            <h3>API Calls</h3>
+            <ul id="api-log-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        function logApi(method, path) {
+            const li = document.createElement('li');
+            li.textContent = method + ' ' + path;
+            document.getElementById('api-log-list').appendChild(li);
+        }
+
+        const draftId = sessionStorage.getItem('draftId') || 'draft_001';
+
+        // On page load — GET authorize model
+        const authPath = '/bff/bank-connections/draft/' + draftId + '/authorize';
+        logApi('GET', authPath);
+        fetch(authPath)
+            .then(r => r.json())
+            .then(data => {
+                logApi('\u2713 Response', JSON.stringify(data));
+                const info = data.bankInformation || {};
+                document.getElementById('bankName').textContent = info.bankName || '';
+                document.getElementById('routingNumber').textContent = info.routingNumber || '';
+                document.getElementById('accountNumber').textContent = info.accountNumber || '';
+                document.getElementById('accountType').textContent = info.accountType || '';
+                document.getElementById('accountOwners').textContent = (info.owners || []).join(', ');
+                document.getElementById('correspondentRoutingNumber').textContent = info.correspondentRoutingNumber || '';
+                document.getElementById('correspondentAccountNumber').textContent = info.correspondentAccountNumber || '';
+
+                const autoDiv = document.getElementById('autoAccounts');
+                (data.autoAuthorizedAccounts || []).forEach(a => {
+                    autoDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.vanguardAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
+                });
+
+                const eligibleDiv = document.getElementById('eligibleAccounts');
+                (data.eligibleAdditionalAccounts || []).forEach(a => {
+                    eligibleDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.vanguardAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
+                });
+            })
+            .catch(() => {});
+
+        function callSaveAuthorizations(e) {
+            e.preventDefault();
+            const postPath = '/bff/bank-connections/draft/' + draftId + '/authorizations';
+            logApi('POST', postPath);
+            fetch(postPath, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authorizedVanguardAccounts: ['VA_80001'] })
+            })
+            .then(r => r.json())
+            .then(data => {
+                logApi('\u2713 Response', JSON.stringify(data));
+                window.location.href = 'review.html';
+            })
+            .catch(() => window.location.href = 'review.html');
+        }
+    </script>
+</body>
+</html>

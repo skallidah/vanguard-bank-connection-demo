@@ -1,0 +1,214 @@
+{
+  "customers": [
+    { "customerId": "cust_10001", "firstName": "Elizabeth", "lastName": "Singleton" },
+    { "customerId": "cust_10002", "firstName": "Michael", "lastName": "Turner" },
+    { "customerId": "cust_10003", "firstName": "Ava", "lastName": "Robinson" },
+    { "customerId": "cust_10004", "firstName": "Daniel", "lastName": "Chen" },
+    { "customerId": "cust_10005", "firstName": "Sophia", "lastName": "Martinez" }
+  ],
+
+  "vanguardAccounts": [
+    {
+      "vanguardAccountId": "VA_80001",
+      "accountName": "Brokerage Account",
+      "managed": true,
+      "owners": [{ "firstName": "Elizabeth", "lastName": "Singleton" }]
+    },
+    {
+      "vanguardAccountId": "VA_80002",
+      "accountName": "Traditional IRA",
+      "managed": true,
+      "owners": [
+        { "firstName": "Elizabeth", "lastName": "Singleton" },
+        { "firstName": "John", "lastName": "Singleton" }
+      ]
+    },
+    {
+      "vanguardAccountId": "VA_80003",
+      "accountName": "Roth IRA",
+      "managed": true,
+      "owners": [{ "firstName": "Michael", "lastName": "Turner" }]
+    },
+    {
+      "vanguardAccountId": "VA_80004",
+      "accountName": "Joint Brokerage",
+      "managed": false,
+      "owners": [
+        { "firstName": "Sophia", "lastName": "Martinez" },
+        { "firstName": "Luis", "lastName": "Martinez" }
+      ]
+    },
+    {
+      "vanguardAccountId": "VA_80005",
+      "accountName": "Individual Brokerage",
+      "managed": false,
+      "owners": [{ "firstName": "Daniel", "lastName": "Chen" }]
+    }
+  ],
+
+  "routingDirectory": [
+    { "routingNumber": "123456789", "bankName": "Y Bank Test", "status": "ACTIVE", "correspondentRoutingNumber": "021000021", "correspondentAccountNumber": "8675309001" },
+    { "routingNumber": "021000021", "bankName": "JPMorgan Chase Bank", "status": "ACTIVE", "correspondentRoutingNumber": null, "correspondentAccountNumber": null },
+    { "routingNumber": "011000015", "bankName": "Bank of America", "status": "ACTIVE", "correspondentRoutingNumber": "026009593", "correspondentAccountNumber": "9001234567" },
+    { "routingNumber": "026009593", "bankName": "Citibank", "status": "ACTIVE", "correspondentRoutingNumber": null, "correspondentAccountNumber": null },
+    { "routingNumber": "111000025", "bankName": "Wells Fargo", "status": "ACTIVE", "correspondentRoutingNumber": "011000015", "correspondentAccountNumber": "7654321009" }
+  ],
+
+  "bankConnectionDrafts": [
+    {
+      "draftId": "draft_001",
+      "customerId": "cust_10001",
+      "routingNumber": "123456789",
+      "accountNumber": "ENCRYPTED:****8901",
+      "accountType": "CHECKING",
+      "owners": [{ "firstName": "Elizabeth", "lastName": "Singleton" }],
+      "nickname": "Primary Checking",
+      "makePrimary": true,
+      "status": "DRAFT"
+    },
+    {
+      "draftId": "draft_002",
+      "customerId": "cust_10002",
+      "routingNumber": "021000021",
+      "accountNumber": "ENCRYPTED:****4432",
+      "accountType": "SAVINGS",
+      "owners": [{ "firstName": "Michael", "lastName": "Turner" }],
+      "nickname": "Savings",
+      "makePrimary": false,
+      "status": "DRAFT"
+    },
+    {
+      "draftId": "draft_003",
+      "customerId": "cust_10003",
+      "routingNumber": "011000015",
+      "accountNumber": "ENCRYPTED:****7721",
+      "accountType": "CHECKING",
+      "owners": [{ "firstName": "Ava", "lastName": "Robinson" }],
+      "nickname": "Daily Use",
+      "makePrimary": true,
+      "status": "DRAFT"
+    },
+    {
+      "draftId": "draft_004",
+      "customerId": "cust_10004",
+      "routingNumber": "026009593",
+      "accountNumber": "ENCRYPTED:****1209",
+      "accountType": "CHECKING",
+      "owners": [{ "firstName": "Daniel", "lastName": "Chen" }],
+      "nickname": "Personal",
+      "makePrimary": false,
+      "status": "DRAFT"
+    },
+    {
+      "draftId": "draft_005",
+      "customerId": "cust_10005",
+      "routingNumber": "111000025",
+      "accountNumber": "ENCRYPTED:****3355",
+      "accountType": "SAVINGS",
+      "owners": [{ "firstName": "Sophia", "lastName": "Martinez" }],
+      "nickname": "Emergency Fund",
+      "makePrimary": false,
+      "status": "DRAFT"
+    }
+  ],
+
+  "draftAuthorizations": [
+    {
+      "draftId": "draft_001",
+      "autoAuthorizedAccounts": [{ "vanguardAccountId": "VA_80001", "ownershipMatch": "IDENTICAL" }],
+      "eligibleAdditionalAccounts": [{ "vanguardAccountId": "VA_80002", "ownershipMatch": "NON_IDENTICAL" }]
+    },
+    {
+      "draftId": "draft_002",
+      "autoAuthorizedAccounts": [{ "vanguardAccountId": "VA_80003", "ownershipMatch": "IDENTICAL" }],
+      "eligibleAdditionalAccounts": []
+    },
+    {
+      "draftId": "draft_003",
+      "autoAuthorizedAccounts": [],
+      "eligibleAdditionalAccounts": []
+    },
+    {
+      "draftId": "draft_004",
+      "autoAuthorizedAccounts": [{ "vanguardAccountId": "VA_80005", "ownershipMatch": "IDENTICAL" }],
+      "eligibleAdditionalAccounts": []
+    },
+    {
+      "draftId": "draft_005",
+      "autoAuthorizedAccounts": [{ "vanguardAccountId": "VA_80004", "ownershipMatch": "IDENTICAL" }],
+      "eligibleAdditionalAccounts": []
+    }
+  ],
+
+  "draftAuthorizationSelections": [
+    { "draftId": "draft_001", "authorizedVanguardAccounts": ["VA_80001", "VA_80002"] },
+    { "draftId": "draft_002", "authorizedVanguardAccounts": ["VA_80003"] },
+    { "draftId": "draft_003", "authorizedVanguardAccounts": [] },
+    { "draftId": "draft_004", "authorizedVanguardAccounts": ["VA_80005"] },
+    { "draftId": "draft_005", "authorizedVanguardAccounts": ["VA_80004"] }
+  ],
+
+  "bankConnections": [
+    {
+      "bankConnectionId": "bc_90001",
+      "customerId": "cust_10001",
+      "routingNumber": "123456789",
+      "bankName": "Y Bank Test",
+      "accountNumberToken": "tok_001",
+      "accountType": "CHECKING",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "bankConnectionId": "bc_90002",
+      "customerId": "cust_10002",
+      "routingNumber": "021000021",
+      "bankName": "JPMorgan Chase Bank",
+      "accountNumberToken": "tok_002",
+      "accountType": "SAVINGS",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "bankConnectionId": "bc_90003",
+      "customerId": "cust_10003",
+      "routingNumber": "011000015",
+      "bankName": "Bank of America",
+      "accountNumberToken": "tok_003",
+      "accountType": "CHECKING",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "bankConnectionId": "bc_90004",
+      "customerId": "cust_10004",
+      "routingNumber": "026009593",
+      "bankName": "Citibank",
+      "accountNumberToken": "tok_004",
+      "accountType": "CHECKING",
+      "status": "PENDING_VERIFICATION"
+    },
+    {
+      "bankConnectionId": "bc_90005",
+      "customerId": "cust_10005",
+      "routingNumber": "111000025",
+      "bankName": "Wells Fargo",
+      "accountNumberToken": "tok_005",
+      "accountType": "SAVINGS",
+      "status": "PENDING_VERIFICATION"
+    }
+  ],
+
+  "bankAuthorizations": [
+    { "bankConnectionId": "bc_90001", "vanguardAccountId": "VA_80001", "status": "AUTHORIZED" },
+    { "bankConnectionId": "bc_90001", "vanguardAccountId": "VA_80002", "status": "AUTHORIZED" },
+    { "bankConnectionId": "bc_90002", "vanguardAccountId": "VA_80003", "status": "AUTHORIZED" },
+    { "bankConnectionId": "bc_90004", "vanguardAccountId": "VA_80005", "status": "AUTHORIZED" },
+    { "bankConnectionId": "bc_90005", "vanguardAccountId": "VA_80004", "status": "AUTHORIZED" }
+  ],
+
+  "microDeposits": [
+    { "bankConnectionId": "bc_90001", "amounts": [0.12, 0.07], "status": "PENDING" },
+    { "bankConnectionId": "bc_90002", "amounts": [0.15, 0.09], "status": "PENDING" },
+    { "bankConnectionId": "bc_90003", "amounts": [0.21, 0.05], "status": "PENDING" },
+    { "bankConnectionId": "bc_90004", "amounts": [0.19, 0.11], "status": "PENDING" },
+    { "bankConnectionId": "bc_90005", "amounts": [0.08, 0.14], "status": "PENDING" }
+  ]
+}

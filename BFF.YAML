@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: BFF Bank Connection API
+  description: UI-facing APIs supporting draft-based bank connection, authorization, review, and submit flows
+  version: 1.0.0
+
+servers:
+  - url: https://api.example.com
+
+tags:
+  - name: Bank Connection Draft
+  - name: Authorization
+
+paths:
+
+  /bff/bank-connections/draft:
+    post:
+      tags: [Bank Connection Draft]
+      summary: Create bank connection draft
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftRequest'
+      responses:
+        '201':
+          description: Draft created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftResponse'
+
+  /bff/bank-connections/draft/{draftId}:
+    put:
+      tags: [Bank Connection Draft]
+      summary: Update bank connection draft
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DraftRequest'
+      responses:
+        '200':
+          description: Draft updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DraftResponse'
+
+  /bff/bank-connections/draft/{draftId}/authorize:
+    get:
+      tags: [Authorization]
+      summary: Get authorization model for draft
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Authorization data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthorizationView'
+
+  /bff/bank-connections/draft/{draftId}/authorizations:
+    post:
+      tags: [Authorization]
+      summary: Save authorization selections
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizationSelection'
+      responses:
+        '200':
+          description: Authorization selections saved
+
+  /bff/bank-connections/draft/{draftId}/review:
+    get:
+      tags: [Bank Connection Draft]
+      summary: Get review data
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Review data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReviewView'
+
+  /bff/bank-connections/draft/{draftId}/submit:
+    post:
+      tags: [Bank Connection Draft]
+      summary: Submit bank connection draft
+      description: Atomically creates bank connection, authorizations, and initiates micro-deposits.
+      parameters:
+        - name: draftId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Bank connection submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitResponse'
+
+components:
+  schemas:
+
+    DraftRequest:
+      type: object
+      required: [routingNumber, accountNumber, accountType, owners]
+      properties:
+        routingNumber:
+          type: string
+        accountNumber:
+          type: string
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS]
+        owners:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Owner'
+        nickname:
+          type: string
+        makePrimary:
+          type: boolean
+
+    DraftResponse:
+      type: object
+      properties:
+        draftId:
+          type: string
+        status:
+          type: string
+          enum: [DRAFT]
+
+    AuthorizationView:
+      type: object
+      properties:
+        bankInformation:
+          $ref: '#/components/schemas/BankSummary'
+        autoAuthorizedAccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VanguardAccount'
+        eligibleAdditionalAccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VanguardAccount'
+
+    AuthorizationSelection:
+      type: object
+      properties:
+        authorizedVanguardAccounts:
+          type: array
+          items:
+            type: string
+
+    ReviewView:
+      type: object
+      properties:
+        bankInformation:
+          $ref: '#/components/schemas/BankSummary'
+        authorizedAccounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/VanguardAccount'
+        primaryBank:
+          type: boolean
+        verificationMethod:
+          type: string
+          enum: [MICRO_DEPOSIT]
+
+    SubmitResponse:
+      type: object
+      properties:
+        bankConnectionId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING_VERIFICATION]
+
+    Owner:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName:
+          type: string
+        middleName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+        suffix:
+          type: string
+          nullable: true
+
+    BankSummary:
+      type: object
+      properties:
+        bankName:
+          type: string
+        routingNumber:
+          type: string
+        accountType:
+          type: string
+        owners:
+          type: array
+          items:
+            type: string
+
+    VanguardAccount:
+      type: object
+      properties:
+        vanguardAccountId:
+          type: string
+        accountName:
+          type: string
+        managed:
+          type: boolean
+        ownershipMatch:
+          type: string
+          enum: [IDENTICAL, NON_IDENTICAL]
+``

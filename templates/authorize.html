@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authorize accounts</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Authorize accounts</h1>
+        <p class="text-small">Verify the bank information you entered and choose the Vanguard accounts you'll use to move money between your bank and Vanguard.</p>
+
+        <h2>Bank information</h2>
+        <table class="data-table">
+            <tr><th>Bank name</th><td>{{ info.bankName }}</td></tr>
+            <tr><th>Routing number</th><td>{{ info.routingNumber }}</td></tr>
+            <tr><th>Account number</th><td>{{ info.accountNumber }}</td></tr>
+            <tr><th>Account type</th><td>{{ info.accountType }}</td></tr>
+            <tr><th>Account owners</th><td>{{ info.owners | join(', ') }}</td></tr>
+            {% if info.correspondentRoutingNumber %}
+            <tr><th>Correspondent routing number</th><td>{{ info.correspondentRoutingNumber }}</td></tr>
+            {% endif %}
+            {% if info.correspondentAccountNumber %}
+            <tr><th>Correspondent account number</th><td>{{ info.correspondentAccountNumber }}</td></tr>
+            {% endif %}
+        </table>
+
+        <h2>Accounts that will be authorized to use this bank account</h2>
+        <p class="text-small">These accounts will be immediately authorized for use because the ownership is identical to your bank account.</p>
+        <div style="margin-left: 200px; font-size: 13px; line-height: 1.6;">
+            {% for a in auto_accounts %}
+                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.vanguardAccountId }}{% if a.managed %} (Managed){% endif %}<br>
+            {% else %}
+                <em>No auto-authorized accounts.</em>
+            {% endfor %}
+        </div>
+
+        <h2>Review additional accounts that can be authorized to use this bank</h2>
+        <p class="text-small">The following account(s) don't have identical ownership to the bank account you're adding but are eligible for use after further authorization.</p>
+        <div style="margin-left: 200px; font-size: 13px; line-height: 1.6;">
+            {% for a in eligible_accounts %}
+                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.vanguardAccountId }}{% if a.managed %} (Managed){% endif %}<br>
+            {% else %}
+                <em>No eligible additional accounts.</em>
+            {% endfor %}
+        </div>
+
+        <div class="action-buttons">
+            <a href="/" class="btn">CANCEL</a>
+            <div class="right-btns">
+                <a href="/add-bank" class="btn">BACK</a>
+                <a href="#" class="btn" onclick="callSaveAuthorizations(event)">REVIEW</a>
+            </div>
+        </div>
+
+        <div class="footer-note">Vanguard Internal Use Only</div>
+        <div id="api-log"><h3>API Calls</h3><ul id="api-log-list"></ul></div>
+    </div>
+
+    <script>
+        function logApi(method, path) {
+            const li = document.createElement('li');
+            li.textContent = method + ' ' + path;
+            document.getElementById('api-log-list').appendChild(li);
+        }
+
+        const draftId = '{{ draft_id }}';
+
+        function callSaveAuthorizations(e) {
+            e.preventDefault();
+            const postPath = '/bff/bank-connections/draft/' + draftId + '/authorizations';
+            logApi('POST', postPath);
+            const autoIds = {{ auto_ids | tojson }};
+            fetch(postPath, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ authorizedVanguardAccounts: autoIds })
+            })
+            .then(r => r.json())
+            .then(data => {
+                logApi('\u2713 Response', JSON.stringify(data));
+                window.location.href = '/review/' + draftId;
+            })
+            .catch(() => {});
+        }
+    </script>
+</body>
+</html>

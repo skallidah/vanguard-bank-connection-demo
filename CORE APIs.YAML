@@ -1,0 +1,127 @@
+openapi: 3.0.3
+info:
+  title: Core Bank Connection API
+  description: Domain-level APIs for bank connections, authorizations, and micro-deposit verification
+  version: 1.0.0
+
+servers:
+  - url: https://core.api.example.com
+
+tags:
+  - name: Bank Connections
+  - name: Authorization
+  - name: Verification
+
+paths:
+
+  /bank-connections:
+    post:
+      tags: [Bank Connections]
+      summary: Create bank connection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBankConnectionRequest'
+      responses:
+        '201':
+          description: Bank connection created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankConnectionResponse'
+
+  /bank-connections/{bankConnectionId}/authorizations:
+    post:
+      tags: [Authorization]
+      summary: Create bank authorizations
+      parameters:
+        - name: bankConnectionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthorizationRequest'
+      responses:
+        '200':
+          description: Authorizations created
+
+  /bank-connections/{bankConnectionId}/micro-deposits:
+    post:
+      tags: [Verification]
+      summary: Initiate micro-deposit verification
+      responses:
+        '202':
+          description: Micro-deposits initiated
+
+components:
+  schemas:
+
+    CreateBankConnectionRequest:
+      type: object
+      required:
+        - customerId
+        - routingNumber
+        - accountNumberToken
+        - accountType
+        - owners
+      properties:
+        customerId:
+          type: string
+        routingNumber:
+          type: string
+        accountNumberToken:
+          type: string
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS]
+        owners:
+          type: array
+          items:
+            $ref: '#/components/schemas/Owner'
+        nickname:
+          type: string
+        primary:
+          type: boolean
+
+    BankConnectionResponse:
+      type: object
+      properties:
+        bankConnectionId:
+          type: string
+        status:
+          type: string
+          enum: [PENDING_VERIFICATION]
+        createdAt:
+          type: string
+          format: date-time
+
+    AuthorizationRequest:
+      type: object
+      properties:
+        vanguardAccountIds:
+          type: array
+          items:
+            type: string
+
+    Owner:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        firstName:
+          type: string
+        middleName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+        suffix:
+          type: string
+          nullable: true
+``

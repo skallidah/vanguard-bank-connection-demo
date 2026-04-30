@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Submission Successful</title>
+    <link rel="stylesheet" href="/assets/styles.css">
+    <style>
+        .success-box { text-align: center; padding: 60px 20px; }
+        .success-icon { font-size: 56px; color: #2a7a2a; }
+        .success-title { font-size: 22px; color: #2a7a2a; margin: 20px 0 10px; font-weight: bold; }
+        .success-sub { font-size: 13px; color: #555; margin-bottom: 6px; }
+        .bc-id { font-size: 12px; color: #888; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Vanguard</div>
+        <div class="success-box">
+            <div class="success-icon">&#10003;</div>
+            <div class="success-title">Entry submitted successfully</div>
+            <p class="success-sub">Your bank account has been connected and micro-deposit verification has been initiated.</p>
+            <p class="success-sub">It may take 1–3 business days for the deposits to appear in your account.</p>
+            {% if bc_id %}
+            <p class="bc-id">Bank Connection ID: {{ bc_id }}</p>
+            {% endif %}
+        </div>
+        <div class="action-buttons" style="justify-content: center;">
+            <a href="/" class="btn">START OVER</a>
+        </div>
+        <div class="footer-note">Vanguard Internal Use Only</div>
+    </div>
+</body>
+</html>

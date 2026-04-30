@@ -1,0 +1,10 @@
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+data.xlsx
+data_old.xlsx
+van_1/__MACOSX/
+*.egg-info/
+.env

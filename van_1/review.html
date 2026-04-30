@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Review your information</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Review your information</h1>
+        <p class="text-small">The bank below will be connected to your account. Make sure you review the next steps to finalize the process.</p>
+        
+        <p class="text-small text-bold">Important note: You can't move money from Vanguard to this bank until you've completed the micro-deposit process and we've validated your bank information.</p>
+
+        <div class="info-box">
+            <p style="margin-top: 0;"><strong>I've entered and saved your bank account information.</strong> You'll need to follow these instructions to complete the process:</p>
+            <ol>
+                <li>Log on to our website, go to the <strong>My Accounts</strong> tab, click <strong>Profile & account settings</strong>, click <strong>Bank information</strong>.</li>
+                <li>Review the new bank information. If everything is correct, read and sign the authorization agreement. You'll receive additional instructions after you e-sign.</li>
+                <li>You can't move money from Vanguard to this bank until you've completed the micro-deposit process and we've validated your bank information.</li>
+            </ol>
+        </div>
+
+        <h2>Part 1 details</h2>
+
+        <div class="bordered-section">
+            <div class="bordered-section-header">
+                Bank information
+                <a href="#" style="float: right; color: #333; font-weight: normal;">Edit</a>
+            </div>
+            <table class="data-table">
+                <tr><th>Bank name</th><td>y bank1 test</td></tr>
+                <tr><th>Routing number</th><td>123456789</td></tr>
+                <tr><th>Account number</th><td>12345678901</td></tr>
+                <tr><th>Account type</th><td>Checking</td></tr>
+                <tr><th>Account owners</th><td>Elizabeth singleton</td></tr>
+                <tr><th>Bank nickname</th><td>test bank</td></tr>
+                <tr><th>Primary bank</th><td>No</td></tr>
+            </table>
+        </div>
+
+        <div class="bordered-section">
+            <div class="bordered-section-header">Accounts authorized to use this bank</div>
+            <div class="text-small" style="line-height: 1.6;">
+                Elizabeth Singleton—Brokerage Account—80094333 (Managed)<br>
+                Elizabeth Singleton—Traditional IRA Brokerage Account—59990776 (Managed)
+            </div>
+        </div>
+
+        <div class="action-buttons">
+            <a href="index.html" class="btn">CANCEL</a>
+            <div class="right-btns">
+                <a href="authorize.html" class="btn">BACK</a>
+                <a href="#" class="btn" onclick="callSubmit(event)">SUBMIT</a>
+            </div>
+        </div>
+
+        <div id="api-log">
+            <h3>API Calls</h3>
+            <ul id="api-log-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        function logApi(method, path) {
+            const li = document.createElement('li');
+            li.textContent = method + ' ' + path;
+            document.getElementById('api-log-list').appendChild(li);
+        }
+
+        const draftId = sessionStorage.getItem('draftId') || 'draft_001';
+
+        // On page load — GET review data
+        const reviewPath = '/bff/bank-connections/draft/' + draftId + '/review';
+        logApi('GET', reviewPath);
+        fetch(reviewPath)
+            .then(r => r.json())
+            .then(data => logApi('\u2713 Response', JSON.stringify(data)))
+            .catch(() => {});
+
+        function callSubmit(e) {
+            e.preventDefault();
+            const submitPath = '/bff/bank-connections/draft/' + draftId + '/submit';
+            logApi('POST', submitPath);
+            fetch(submitPath, { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                    logApi('\u2713 Response', JSON.stringify(data));
+                    sessionStorage.setItem('bankConnectionId', data.bankConnectionId);
+                    window.location.href = 'success.html';
+                })
+                .catch(() => window.location.href = 'success.html');
+        }
+    </script>
+</body>
+</html>

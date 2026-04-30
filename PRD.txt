@@ -1,635 +1,860 @@
 ================================================================================
 PRODUCT REQUIREMENTS DOCUMENT
-Vanguard Bank Connection Demo — KaneAI Test Generation
+Vanguard Bank Connection Demo — KaneAI UI Test Generation
 ================================================================================
 
 DOCUMENT PURPOSE
 ----------------
-This PRD defines the features, user flows, and acceptance criteria for the
-Vanguard Bank Connection Demo app. It is written to drive test case generation
-in LambdaTest KaneAI, covering both positive (happy path) and negative
-(error/edge case) scenarios. Automated tests generated from this document
-can target either the live hosted URL or a local instance via LT Tunnel.
+This PRD defines the UI workflow, pages, and acceptance criteria for the
+Vanguard Bank Connection Demo app. It is written exclusively to drive UI
+test scenario and test case generation in LambdaTest KaneAI — covering
+positive (happy path), negative (validation/error), and edge case scenarios.
+All tests interact with the browser only; no direct API calls are made by tests.
 
 LINKS
 -----
-  Live App:   https://vanguard-bank-connection-demo-production.up.railway.app
-  GitHub:     https://github.com/skallidah/vanguard-bank-connection-demo
+  App URL:  https://vanguard-bank-connection-demo-production.up.railway.app
+  GitHub:   https://github.com/skallidah/vanguard-bank-connection-demo
 
 --------------------------------------------------------------------------------
 SECTION 1: APPLICATION OVERVIEW
 --------------------------------------------------------------------------------
 
-The Vanguard Bank Connection Demo is an internal prototype of the bank account
-linking flow used on vanguard.com. It allows a Vanguard customer to:
+The Vanguard Bank Connection Demo simulates the bank account linking flow from
+vanguard.com. A customer connects an external bank account to their Vanguard
+investment accounts through a 4-step guided UI. At the end, the system
+initiates micro-deposit verification.
 
-  1. Enter external bank account details (routing number, account number, type,
-     owner name).
-  2. Review which Vanguard investment accounts will be authorized to transact
-     with the linked bank.
-  3. Confirm a summary and submit, which triggers micro-deposit verification.
+User journey (5 pages):
+  Landing → Add Bank → Authorize Accounts → Review → Success
 
-The app is a single Flask server exposing both a multi-page web UI and a REST
-API. It uses an Excel file (data.xlsx) as its database, seeded on first run
-from mock-db.json.
+The database resets to seed data on each Railway deployment, so the five
+pre-seeded draft records (draft_001 through draft_005) are always available.
 
 --------------------------------------------------------------------------------
-SECTION 2: BASE URL CONFIGURATION FOR KANEAI
+SECTION 2: APP URL FOR KANEAI
 --------------------------------------------------------------------------------
 
-OPTION A — Hosted (recommended, no tunnel needed)
-  The app is publicly deployed on Railway. Use this URL directly in KaneAI:
+All test cases target the publicly hosted app on Railway. No tunnel or local
+setup is required.
 
-  Base URL:  https://vanguard-bank-connection-demo-production.up.railway.app
+  App URL:  https://vanguard-bank-connection-demo-production.up.railway.app
 
-  Note: The Railway database (data.xlsx) resets to seed data on each
-  deployment. Pre-seeded draft IDs (draft_001 through draft_005) are always
-  available after a fresh deploy.
-
-OPTION B — Local via LT Tunnel
-  If running the app locally and testing with KaneAI's cloud browsers,
-  expose it via LT Tunnel:
-
-  Starting the app:
-    python app.py                       (default, port 5000)
-    FLASK_DEBUG=true python app.py      (with auto-reload)
-
-  Starting LT Tunnel:
-    ./LT --user <LT_USERNAME> --key <LT_ACCESS_KEY> --tunnel-name vanguard-demo
-
-  Tunnel Base URL:
-    Configure the tunnel hostname in LambdaTest as the base URL, e.g.
-    http://localhost:5000 mapped through the tunnel.
-
-All test cases below use {{BASE_URL}} as a placeholder. Substitute with
-the Railway URL (Option A) or the tunnel URL (Option B).
+Use this as the base URL in KaneAI. All page paths below are relative to it,
+e.g. the landing page is:
+  https://vanguard-bank-connection-demo-production.up.railway.app/
 
 --------------------------------------------------------------------------------
-SECTION 3: PAGES & ROUTES
+SECTION 3: PAGES & UI ELEMENTS
 --------------------------------------------------------------------------------
 
-PAGE 1 — Landing / Intro
-  Route:    GET /
+PAGE 1 — Landing
+  URL:      /
   Title:    "Connect your bank account"
-  Purpose:  Explains the 4-step micro-deposit process to the user.
-  Action:   Single CTA button labeled "CONTINUE" links to /add-bank.
+  Elements:
+    - "Vanguard" logo text at the top
+    - Heading: "Connect your bank account"
+    - Subheading paragraph starting with "Quickly and easily move money..."
+    - Red-text paragraph starting with "Follow these steps..."
+    - Ordered list with 4 steps describing the micro-deposit process
+    - Bold important note paragraph about timing restrictions
+    - Button: "CONTINUE" (navigates to /add-bank)
+    - Footer: "Vanguard Internal Use Only"
 
 PAGE 2 — Add Bank
-  Route:    GET /add-bank
+  URL:      /add-bank
   Title:    "Add a new bank"
-  Purpose:  Collect bank and owner details. Validates on submit client-side,
-            then calls POST /bff/bank-connections/draft.
-  Fields:
-    - Routing number (required, exactly 9 digits)
-      On blur with a valid 9-digit value: auto-fetches bank name via
-      GET /routing-lookup?routingNumber=<value> and populates:
-        • Bank name (read-only display)
-        • Correspondent routing number (read-only input, if applicable)
-        • Correspondent account number (read-only input, if applicable)
-    - Account number (required)
-    - Re-enter account number (required, must match account number)
-    - Account type: radio — Checking (default) | Savings
-    - Owner first name (required)
-    - Owner last name (required)
-    - Owner middle name (optional)
-    - Owner suffix (optional dropdown)
-    - Bank nickname (optional text input)
-    - Make this your primary bank (optional checkbox, default checked)
-  On success: redirects to /authorize/<draftId>
+  Elements:
+    - Heading: "Add a new bank"
+    - Subheading: "Bank information"
+    - Routing number input (required, must be exactly 9 digits)
+    - Bank name display (auto-populated on valid routing number entry, read-only)
+    - Account number input (required)
+    - Re-enter account number input (required, must match account number)
+    - Correspondent routing number input (read-only, auto-populated if applicable)
+    - Correspondent account number input (read-only, auto-populated if applicable)
+    - Account type radio buttons: "Checking" (default selected) | "Savings"
+    - Owner section labeled "Personal account owner"
+      - First name input (required)
+      - Middle name input (optional)
+      - Last name input (required)
+      - Suffix dropdown (optional): --, Mr., Mrs., Ms., Miss, Dr., Prof.,
+        Jr., Sr., II, III
+    - "+ Add another name" link (optional, adds additional owner)
+    - Bank nickname input (optional)
+    - "Make this your primary bank" checkbox (checked by default)
+    - Button: "CANCEL" (navigates to /)
+    - Button: "CONTINUE" (validates and submits; navigates to /authorize/<id>)
+    - Footer: "Vanguard Internal Use Only"
+    - "API Calls" log panel at the bottom of the page
+  Validation errors (shown inline without page reload):
+    - Routing number blank → "Routing number is required."
+    - Routing number not 9 digits or contains letters → "Must be exactly 9 digits."
+    - Account number blank → "Account number is required."
+    - Re-enter account number blank → "Please re-enter account number."
+    - Re-enter account number differs → "Account numbers do not match."
+    - Owner first or last name blank → "Owner first and last name are required."
 
 PAGE 3 — Authorize Accounts
-  Route:    GET /authorize/<draft_id>
+  URL:      /authorize/<draft_id>
   Title:    "Authorize accounts"
-  Purpose:  Shows bank details from the draft and lists which Vanguard
-            accounts are auto-authorized (identical ownership) vs. eligible
-            for additional authorization (partial ownership match).
-  Sections:
-    - Bank information table (bank name, routing number, account number,
-      account type, account owners, correspondent details if present)
-    - "Accounts that will be authorized" — auto-authorized list
-    - "Review additional accounts" — eligible additional accounts list
-  Action:   "REVIEW" button calls POST /bff/bank-connections/draft/<id>/authorizations
-            with the auto-authorized account IDs, then redirects to /review/<draftId>
-  Other:    CANCEL → /, BACK → /add-bank
+  Elements:
+    - Heading: "Authorize accounts"
+    - Descriptive paragraph about choosing Vanguard accounts
+    - Subheading: "Bank information"
+    - Data table with rows: Bank name, Routing number, Account number,
+      Account type, Account owners (and optionally Correspondent routing
+      number, Correspondent account number if present for the bank)
+    - Subheading: "Accounts that will be authorized to use this bank account"
+    - Descriptive paragraph about identical ownership
+    - List of auto-authorized accounts in format:
+        <owner name>—<account name>—<VA ID> (Managed)   [if managed]
+        <owner name>—<account name>—<VA ID>              [if not managed]
+      or: "No auto-authorized accounts." if none
+    - Subheading: "Review additional accounts that can be authorized to use this bank"
+    - Descriptive paragraph about non-identical ownership
+    - List of eligible additional accounts (same format as above)
+      or: "No eligible additional accounts." if none
+    - Button: "CANCEL" (navigates to /)
+    - Button: "BACK" (navigates to /add-bank)
+    - Button: "REVIEW" (saves authorizations and navigates to /review/<id>)
+    - "API Calls" log panel at the bottom of the page
 
 PAGE 4 — Review
-  Route:    GET /review/<draft_id>
+  URL:      /review/<draft_id>
   Title:    "Review your information"
-  Purpose:  Final summary before submission.
-  Sections:
-    - Info box with next-step instructions (micro-deposit process)
-    - Bank information: bank name, routing number, account type, account
-      owners, nickname (if set), primary bank (Yes/No), verification
-      method (always "MICRO_DEPOSIT")
-    - Authorized accounts list (name — account name — ID, with "(Managed)"
-      badge if applicable)
-  Action:   "SUBMIT" button calls POST /bff/bank-connections/draft/<id>/submit,
-            then redirects to /success/<bankConnectionId>
-  Other:    CANCEL → /, BACK → /authorize/<draftId>, Edit → /add-bank
+  Elements:
+    - Heading: "Review your information"
+    - Intro paragraph: "The bank below will be connected to your account..."
+    - Bold warning: "Important note: You can't move money from Vanguard..."
+    - Info box with 3-step next-steps instructions
+    - Subheading: "Part 1 details"
+    - "Bank information" bordered section with Edit link and data table:
+        Bank name, Routing number, Account type, Account owners,
+        Bank nickname (only if nickname was set), Primary bank (Yes/No),
+        Verification method (always "MICRO_DEPOSIT")
+    - "Accounts authorized to use this bank" bordered section:
+        List of authorized accounts in format:
+          <owner name>—<account name>—<VA ID> (Managed)
+        or: "No authorized accounts." if none
+    - Button: "CANCEL" (navigates to /)
+    - Button: "BACK" (navigates to /authorize/<draft_id>)
+    - Button: "SUBMIT" (submits and navigates to /success/<bc_id>)
 
 PAGE 5 — Success
-  Route:    GET /success/<bc_id>
+  URL:      /success/<bc_id>
   Title:    "Submission Successful"
-  Purpose:  Confirms the bank was linked and micro-deposits initiated.
-  Content:
-    - Green checkmark icon
-    - "Entry submitted successfully"
-    - "Your bank account has been connected and micro-deposit verification
-       has been initiated."
-    - "It may take 1–3 business days for the deposits to appear."
-    - Bank Connection ID displayed in monospace (e.g. bc_xxxxxx)
-  Action:   "START OVER" button → /
+  Elements:
+    - "Vanguard" logo text
+    - Large green checkmark (✓)
+    - Heading: "Entry submitted successfully"
+    - Paragraph: "Your bank account has been connected and micro-deposit
+      verification has been initiated."
+    - Paragraph: "It may take 1–3 business days for the deposits to appear
+      in your account."
+    - Bank Connection ID in monospace text: "Bank Connection ID: bc_xxxxxx"
+    - Button: "START OVER" (navigates to /)
+    - Footer: "Vanguard Internal Use Only"
 
 --------------------------------------------------------------------------------
 SECTION 4: PRE-SEEDED TEST DATA
 --------------------------------------------------------------------------------
 
-The following data is seeded from mock-db.json on first run. Tests can use
-these directly without going through the Add Bank form.
+These records are always available in the hosted app after a fresh deployment.
+Use them to navigate directly to any step without filling in the Add Bank form.
 
-ROUTING NUMBERS (for form entry):
+ROUTING NUMBERS (for Add Bank form entry):
   123456789  →  Y Bank Test          (has correspondent: 021000021 / 8675309001)
   021000021  →  JPMorgan Chase Bank  (no correspondent)
   011000015  →  Bank of America      (has correspondent: 026009593 / 9001234567)
   026009593  →  Citibank             (no correspondent)
   111000025  →  Wells Fargo          (has correspondent: 011000015 / 7654321009)
 
-PRE-SEEDED DRAFTS:
-  draft_001  — Elizabeth Singleton, Y Bank Test, CHECKING, Primary
-               Auto-authorized: VA_80001 (Brokerage Account, Managed)
-               Eligible additional: VA_80002 (Traditional IRA, Managed)
+PRE-SEEDED DRAFTS (navigate directly to /authorize/<id> or /review/<id>):
 
-  draft_002  — Michael Turner, JPMorgan Chase Bank, SAVINGS
-               Auto-authorized: VA_80003 (Roth IRA, Managed)
-               No eligible additional accounts
+  draft_001  Customer: Elizabeth Singleton
+             Bank: Y Bank Test | Routing: 123456789 | CHECKING | Primary: Yes
+             Correspondent: 021000021 / 8675309001
+             Auto-authorized:     VA_80001 — Brokerage Account (Managed)
+             Eligible additional: VA_80002 — Traditional IRA (Managed)
 
-  draft_003  — Ava Robinson, Bank of America, CHECKING, Primary
-               No auto-authorized accounts
-               No eligible additional accounts
+  draft_002  Customer: Michael Turner
+             Bank: JPMorgan Chase Bank | Routing: 021000021 | SAVINGS | Primary: No
+             No correspondent
+             Auto-authorized: VA_80003 — Roth IRA (Managed)
+             No eligible additional accounts
 
-  draft_004  — Daniel Chen, Citibank, CHECKING
-               Auto-authorized: VA_80005 (Individual Brokerage, not managed)
+  draft_003  Customer: Ava Robinson
+             Bank: Bank of America | Routing: 011000015 | CHECKING | Primary: Yes
+             Has correspondent: 026009593 / 9001234567
+             No auto-authorized accounts
+             No eligible additional accounts
 
-  draft_005  — Sophia Martinez, Wells Fargo, SAVINGS
-               Auto-authorized: VA_80004 (Joint Brokerage, not managed)
+  draft_004  Customer: Daniel Chen
+             Bank: Citibank | Routing: 026009593 | CHECKING | Primary: No
+             No correspondent
+             Auto-authorized: VA_80005 — Individual Brokerage (not managed)
 
-VANGUARD ACCOUNTS:
-  VA_80001  Brokerage Account     Managed   Owner: Elizabeth Singleton
-  VA_80002  Traditional IRA       Managed   Owners: Elizabeth Singleton, John Singleton
-  VA_80003  Roth IRA              Managed   Owner: Michael Turner
-  VA_80004  Joint Brokerage       Not managed  Owners: Sophia Martinez, Luis Martinez
-  VA_80005  Individual Brokerage  Not managed  Owner: Daniel Chen
+  draft_005  Customer: Sophia Martinez
+             Bank: Wells Fargo | Routing: 111000025 | SAVINGS | Primary: No
+             Has correspondent: 011000015 / 7654321009
+             Auto-authorized: VA_80004 — Joint Brokerage (not managed)
 
 --------------------------------------------------------------------------------
 SECTION 5: POSITIVE TEST CASES
 --------------------------------------------------------------------------------
 
-TC-P-01: Landing page loads correctly
-  Entry point: GET /
+TC-P-01: Landing page content and navigation
+  URL:    https://vanguard-bank-connection-demo-production.up.railway.app/
   Steps:
-    1. Navigate to /
+    1. Open the app URL in the browser
   Expected:
-    - Page title is "Connect your bank account"
-    - "Vanguard" logo is visible
-    - Four ordered list items describing the micro-deposit process are visible
-    - "CONTINUE" button is present and links to /add-bank
-
-TC-P-02: Routing number lookup populates bank name
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Enter "021000021" in the Routing number field
-    3. Click/tab away from the field (trigger blur)
-  Expected:
-    - Bank name field displays "JPMorgan Chase Bank"
-    - Correspondent routing and account number fields remain empty (no correspondent)
-
-TC-P-03: Routing number with correspondent populates all fields
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Enter "123456789" in the Routing number field
-    3. Click/tab away from the field
-  Expected:
-    - Bank name field displays "Y Bank Test"
-    - Correspondent routing number field shows "021000021"
-    - Correspondent account number field shows "8675309001"
-
-TC-P-04: Full happy path — new bank connection (Checking, primary, with auto+eligible accounts)
-  Entry point: GET /
-  Steps:
-    1. Navigate to /
+    - Page heading "Connect your bank account" is visible
+    - "Vanguard" logo is displayed
+    - 4-item ordered list explaining the micro-deposit steps is visible
+    - Bold important note about timing is visible
+    - CONTINUE button is present
     2. Click CONTINUE
-    3. Enter routing number: 123456789, tab away
-    4. Verify bank name shows "Y Bank Test"
+  Expected:
+    - Browser navigates to /add-bank
+    - Page heading "Add a new bank" is visible
+
+TC-P-02: Bank name auto-populates on valid routing number (no correspondent)
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Click into the Routing number field and type: 021000021
+    3. Click or tab away from the Routing number field
+  Expected:
+    - Bank name display updates to "JPMorgan Chase Bank"
+    - Correspondent routing number field is empty
+    - Correspondent account number field is empty
+
+TC-P-03: Bank name and correspondent fields auto-populate for a routing number with a correspondent
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 123456789
+    3. Tab away from the field
+  Expected:
+    - Bank name shows "Y Bank Test"
+    - Correspondent routing number shows "021000021"
+    - Correspondent account number shows "8675309001"
+
+TC-P-04: Full happy path — Checking account, primary, owner with exact Vanguard match
+  URL:    /
+  Steps:
+    1. Navigate to the app landing page
+    2. Click CONTINUE
+    3. Enter routing number: 123456789 and tab away
+    4. Confirm bank name shows "Y Bank Test"
     5. Enter account number: 11223344
-    6. Re-enter account number: 11223344
+    6. Enter re-enter account number: 11223344
     7. Leave account type as Checking
-    8. Enter owner first name: Elizabeth, last name: Singleton
-    9. Enter nickname: "Primary Checking"
-    10. Leave "Make this your primary bank" checked
-    11. Click CONTINUE
-  Expected after step 11:
-    - Redirected to /authorize/<new_draft_id>
-    - Page shows "Authorize accounts"
-    - Bank information table shows: Y Bank Test, 123456789, CHECKING, Elizabeth Singleton
-    - Auto-authorized section lists: Brokerage Account (VA_80001, Managed)
-    - Eligible additional section lists: Traditional IRA (VA_80002, Managed)
-    Then:
-    12. Click REVIEW
-    - Redirected to /review/<draft_id>
-    - Bank information shows: Y Bank Test, 123456789, CHECKING, Elizabeth Singleton,
-      Primary bank: Yes, Verification method: MICRO_DEPOSIT
-    - Authorized accounts section lists Brokerage Account
-    13. Click SUBMIT
-    - Redirected to /success/<bc_id>
-    - Page shows "Entry submitted successfully"
-    - Bank Connection ID is displayed (format: bc_xxxxxx)
+    8. Enter owner first name: Elizabeth
+    9. Enter owner last name: Singleton
+    10. Enter nickname: Primary Checking
+    11. Leave "Make this your primary bank" checked
+    12. Click CONTINUE
+  Expected:
+    - Browser navigates to /authorize/<new_draft_id>
+    - Heading "Authorize accounts" is visible
+    - Bank information table shows: Y Bank Test, 123456789, CHECKING,
+      Elizabeth Singleton, correspondent 021000021 / 8675309001
+    - Auto-authorized section lists:
+        Elizabeth Singleton—Brokerage Account—VA_80001 (Managed)
+    - Eligible additional section lists:
+        Elizabeth Singleton—Traditional IRA—VA_80002 (Managed)
+    13. Click REVIEW
+  Expected:
+    - Browser navigates to /review/<draft_id>
+    - Bank information table shows: Y Bank Test, 123456789, CHECKING,
+      Elizabeth Singleton, Bank nickname: Primary Checking, Primary bank: Yes,
+      Verification method: MICRO_DEPOSIT
+    - Authorized accounts section lists Brokerage Account entry
+    14. Click SUBMIT
+  Expected:
+    - Browser navigates to /success/<bc_id>
+    - Green checkmark is visible
+    - Heading "Entry submitted successfully" is visible
+    - "Bank Connection ID: bc_" followed by alphanumeric characters is shown
 
 TC-P-05: Full happy path — Savings account, not primary, no eligible accounts
-  Entry point: GET /add-bank
+  URL:    /add-bank
   Steps:
     1. Navigate to /add-bank
-    2. Enter routing number: 021000021, tab away
-    3. Enter account number: 99887766
-    4. Re-enter account number: 99887766
-    5. Select account type: Savings
-    6. Enter owner first name: Michael, last name: Turner
-    7. Uncheck "Make this your primary bank"
-    8. Click CONTINUE
+    2. Enter routing number: 021000021 and tab away
+    3. Confirm bank name shows "JPMorgan Chase Bank"
+    4. Enter account number: 99887766
+    5. Enter re-enter account number: 99887766
+    6. Select account type: Savings
+    7. Enter owner first name: Michael, last name: Turner
+    8. Uncheck "Make this your primary bank"
+    9. Click CONTINUE
   Expected:
-    - Redirected to /authorize/<draft_id>
+    - Navigate to /authorize/<draft_id>
     - Auto-authorized section shows Roth IRA (VA_80003, Managed)
     - Eligible additional section shows "No eligible additional accounts."
-    Then complete REVIEW → SUBMIT → verify success page.
+    10. Click REVIEW → then SUBMIT
+  Expected:
+    - Success page shows "Entry submitted successfully" and a Bank Connection ID
 
-TC-P-06: Authorize page loads for pre-seeded draft with auto and eligible accounts
-  Entry point: GET /authorize/draft_001
+TC-P-06: Authorize page — pre-seeded draft with auto-authorized and eligible accounts
+  URL:    /authorize/draft_001
   Steps:
     1. Navigate to /authorize/draft_001
   Expected:
-    - Bank name: Y Bank Test
-    - Routing number: 123456789
-    - Account type: CHECKING
-    - Account owners: Elizabeth Singleton
-    - Correspondent routing number: 021000021
-    - Correspondent account number: 8675309001
-    - Auto-authorized: Elizabeth Singleton—Brokerage Account—VA_80001 (Managed)
-    - Eligible additional: Elizabeth Singleton—Traditional IRA—VA_80002 (Managed)
-    - CANCEL, BACK, and REVIEW buttons are present
+    - Bank information table shows:
+        Bank name:     Y Bank Test
+        Routing:       123456789
+        Account:       ENCRYPTED:****8901
+        Account type:  CHECKING
+        Owners:        Elizabeth Singleton
+        Correspondent routing: 021000021
+        Correspondent account: 8675309001
+    - Auto-authorized section shows:
+        Elizabeth Singleton—Brokerage Account—VA_80001 (Managed)
+    - Eligible additional section shows:
+        Elizabeth Singleton—Traditional IRA—VA_80002 (Managed)
+    - CANCEL, BACK, and REVIEW buttons are visible
 
-TC-P-07: Authorize page — no auto-authorized accounts
-  Entry point: GET /authorize/draft_003
+TC-P-07: Authorize page — no auto-authorized and no eligible accounts
+  URL:    /authorize/draft_003
   Steps:
     1. Navigate to /authorize/draft_003
   Expected:
     - Auto-authorized section shows "No auto-authorized accounts."
     - Eligible additional section shows "No eligible additional accounts."
 
-TC-P-08: Review page loads for pre-seeded draft
-  Entry point: GET /review/draft_001
+TC-P-08: Authorize page — non-managed account shown without Managed badge
+  URL:    /authorize/draft_004
+  Steps:
+    1. Navigate to /authorize/draft_004
+  Expected:
+    - Auto-authorized section lists Individual Brokerage for Daniel Chen
+    - The text "(Managed)" does NOT appear next to this account entry
+
+TC-P-09: Review page — pre-seeded draft with authorized accounts and nickname
+  URL:    /review/draft_001
   Steps:
     1. Navigate to /review/draft_001
   Expected:
-    - Page title: "Review your information"
-    - Bank name: Y Bank Test
-    - Routing number: 123456789
-    - Account type: CHECKING
-    - Account owners: Elizabeth Singleton
-    - Primary bank: Yes
-    - Verification method: MICRO_DEPOSIT
-    - Authorized accounts section lists: Elizabeth Singleton—Brokerage Account—VA_80001 (Managed)
-                                          Elizabeth Singleton—Traditional IRA—VA_80002 (Managed)
-    - CANCEL, BACK, SUBMIT buttons are present
+    - Heading "Review your information" is visible
+    - Bank information table shows:
+        Bank name: Y Bank Test
+        Routing number: 123456789
+        Account type: CHECKING
+        Account owners: Elizabeth Singleton
+        Bank nickname: Primary Checking
+        Primary bank: Yes
+        Verification method: MICRO_DEPOSIT
+    - Authorized accounts section lists:
+        Elizabeth Singleton—Brokerage Account—VA_80001 (Managed)
+        Elizabeth Singleton—Traditional IRA—VA_80002 (Managed)
+    - CANCEL, BACK, SUBMIT buttons are visible
 
-TC-P-09: Review page — no authorized accounts
-  Entry point: GET /review/draft_003
+TC-P-10: Review page — no authorized accounts shown
+  URL:    /review/draft_003
   Steps:
     1. Navigate to /review/draft_003
   Expected:
     - Authorized accounts section shows "No authorized accounts."
 
-TC-P-10: Submit a pre-seeded draft and reach success page
-  Entry point: GET /review/draft_002
+TC-P-11: Review page — no nickname row when nickname is not set
+  URL:    /review/draft_003
+  Steps:
+    1. Navigate to /review/draft_003
+  Expected:
+    - Bank information table does NOT contain a "Bank nickname" row
+
+TC-P-12: Review page — Primary bank shows "No" when not primary
+  URL:    /review/draft_002
+  Steps:
+    1. Navigate to /review/draft_002
+  Expected:
+    - Primary bank row shows "No"
+
+TC-P-13: Submit from review navigates to success with Bank Connection ID
+  URL:    /review/draft_002
   Steps:
     1. Navigate to /review/draft_002
     2. Click SUBMIT
   Expected:
-    - Redirected to /success/<bc_id>
-    - Page shows green checkmark
-    - "Entry submitted successfully" heading visible
-    - Micro-deposit timing note is visible
-    - Bank Connection ID label and value (bc_xxxxxx) are visible
-    - "START OVER" button links back to /
+    - Browser navigates to /success/<bc_id>
+    - Green checkmark (✓) icon is visible
+    - "Entry submitted successfully" heading is visible
+    - Timing message "It may take 1–3 business days..." is visible
+    - "Bank Connection ID: bc_" with alphanumeric ID is visible
+    - START OVER button is present
 
-TC-P-11: Managed account badge visible on authorize and review pages
-  Entry point: GET /authorize/draft_001
+TC-P-14: Start Over from success returns to landing
+  URL:    /success/bc_90001
+  Steps:
+    1. Navigate to /success/bc_90001
+    2. Click START OVER
+  Expected:
+    - Browser navigates to /
+    - Landing page heading "Connect your bank account" is displayed
+
+TC-P-15: Navigation — CANCEL from Add Bank returns to landing
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Click CANCEL
+  Expected:
+    - Browser navigates to /
+    - Landing page is displayed
+
+TC-P-16: Navigation — CANCEL from Authorize returns to landing
+  URL:    /authorize/draft_001
   Steps:
     1. Navigate to /authorize/draft_001
+    2. Click CANCEL
   Expected:
-    - "(Managed)" appears next to VA_80001 in the auto-authorized list
-    - "(Managed)" appears next to VA_80002 in the eligible list
-  Then:
-    2. Navigate to /review/draft_001
-  Expected:
-    - "(Managed)" appears next to authorized accounts in the review list
+    - Browser navigates to /
 
-TC-P-12: Non-managed account — no Managed badge
-  Entry point: GET /authorize/draft_004
+TC-P-17: Navigation — CANCEL from Review returns to landing
+  URL:    /review/draft_001
   Steps:
-    1. Navigate to /authorize/draft_004
+    1. Navigate to /review/draft_001
+    2. Click CANCEL
   Expected:
-    - VA_80005 (Individual Brokerage) is listed without "(Managed)"
+    - Browser navigates to /
 
-TC-P-13: Navigation — BACK button from authorize returns to add-bank
-  Entry point: GET /authorize/draft_001
+TC-P-18: Navigation — BACK from Authorize goes to Add Bank
+  URL:    /authorize/draft_001
   Steps:
     1. Navigate to /authorize/draft_001
     2. Click BACK
   Expected:
-    - Redirected to /add-bank
+    - Browser navigates to /add-bank
 
-TC-P-14: Navigation — BACK button from review returns to authorize
-  Entry point: GET /review/draft_001
+TC-P-19: Navigation — BACK from Review goes to Authorize
+  URL:    /review/draft_001
   Steps:
     1. Navigate to /review/draft_001
     2. Click BACK
   Expected:
-    - Redirected to /authorize/draft_001
+    - Browser navigates to /authorize/draft_001
 
-TC-P-15: Navigation — CANCEL from any page returns to landing
-  Steps:
-    1. Navigate to /add-bank, click CANCEL → should reach /
-    2. Navigate to /authorize/draft_001, click CANCEL → should reach /
-    3. Navigate to /review/draft_001, click CANCEL → should reach /
-
-TC-P-16: Review page Edit link goes to /add-bank
-  Entry point: GET /review/draft_001
+TC-P-20: Edit link on Review page goes to Add Bank
+  URL:    /review/draft_001
   Steps:
     1. Navigate to /review/draft_001
-    2. Click the "Edit" link in the Bank information section header
+    2. Click the "Edit" link inside the "Bank information" section header
   Expected:
-    - Navigated to /add-bank
+    - Browser navigates to /add-bank
 
-TC-P-17: Nickname appears on review page when set
-  Entry point: POST /bff/bank-connections/draft (via form)
-  Steps:
-    1. Complete add-bank form with nickname "My Chase Savings"
-    2. Proceed to review
-  Expected:
-    - Review page shows a "Bank nickname" row with value "My Chase Savings"
-
-TC-P-18: No nickname row on review when nickname is blank
-  Entry point: Draft with no nickname (e.g., draft_002 has nickname "Savings")
-  Steps:
-    1. Navigate to /review/draft_003
-  Expected:
-    - No "Bank nickname" row appears in the bank information table
-
-TC-P-19: Routing lookup API returns 404 for unknown routing number
+TC-P-21: Nickname appears on review page when entered in the form
   Steps:
     1. Navigate to /add-bank
-    2. Enter routing number: 999999999 (not in directory)
-    3. Tab away from field
+    2. Fill in routing number: 021000021, tab away
+    3. Enter account number: 44556677
+    4. Re-enter account number: 44556677
+    5. Enter owner first name: Test, last name: User
+    6. Enter nickname: My Chase Savings
+    7. Click CONTINUE, then click REVIEW on the authorize page
   Expected:
-    - Bank name field shows "Not found" (the JS fallback display)
-    - No crash; form remains usable
+    - Review page bank information table contains row:
+        Bank nickname | My Chase Savings
 
-TC-P-20: API log panel is visible and records calls
-  Entry point: GET /add-bank
+TC-P-22: Savings account type displayed correctly on authorize and review pages
   Steps:
     1. Navigate to /add-bank
-    2. Fill form with valid data and click CONTINUE
+    2. Enter routing number: 021000021, tab away
+    3. Enter account number: 55667788
+    4. Re-enter account number: 55667788
+    5. Select Savings radio button
+    6. Enter owner first name: Test, last name: User
+    7. Click CONTINUE
   Expected:
-    - "API Calls" section visible on the page
-    - List item "POST /bff/bank-connections/draft" appears
-    - After redirect, the authorize page's API log is empty until REVIEW is clicked
+    - Authorize page bank information table shows Account type: SAVINGS
+    8. Click REVIEW
+  Expected:
+    - Review page bank information table shows Account type: SAVINGS
+
+TC-P-23: Unknown routing number shows "Not found" feedback in bank name
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 999999999 (not in the directory)
+    3. Tab away from the field
+  Expected:
+    - Bank name display updates to "Not found"
+    - Correspondent fields remain empty
+    - Form remains usable (no crash or redirect)
 
 --------------------------------------------------------------------------------
 SECTION 6: NEGATIVE TEST CASES
 --------------------------------------------------------------------------------
 
-TC-N-01: Submit add-bank form with routing number missing
-  Entry point: GET /add-bank
+TC-N-01: CONTINUE with routing number blank
+  URL:    /add-bank
   Steps:
     1. Navigate to /add-bank
     2. Leave routing number blank
-    3. Fill all other required fields correctly
-    4. Click CONTINUE
-  Expected:
-    - Form does NOT submit (no redirect)
-    - Error message "Routing number is required." visible below the field
-    - Routing number input has red/invalid border styling
-
-TC-N-02: Submit add-bank form with routing number not 9 digits
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Enter routing number: 1234 (only 4 digits)
-    3. Fill all other required fields correctly
-    4. Click CONTINUE
-  Expected:
-    - Form does NOT submit
-    - Error message "Must be exactly 9 digits." visible below the routing field
-    - Input has invalid border styling
-
-TC-N-03: Submit add-bank form with account number missing
-  Entry point: GET /add-bank
-  Steps:
-    1. Enter valid routing number: 021000021
-    2. Leave account number blank
-    3. Fill re-enter account number and owner fields
-    4. Click CONTINUE
-  Expected:
-    - Error message "Account number is required." visible
-    - Account number field has invalid styling
-    - Form does NOT submit
-
-TC-N-04: Account number and re-entered account number do not match
-  Entry point: GET /add-bank
-  Steps:
-    1. Enter routing number: 021000021
-    2. Enter account number: 12345678
-    3. Enter re-enter account number: 87654321
-    4. Enter owner first and last name
+    3. Fill account number: 12345678, re-enter: 12345678
+    4. Enter owner first name: Test, last name: User
     5. Click CONTINUE
   Expected:
-    - Error "Account numbers do not match." appears below re-enter field
-    - Re-enter field has invalid styling
-    - Form does NOT submit
-
-TC-N-05: Re-enter account number is blank
-  Entry point: GET /add-bank
-  Steps:
-    1. Enter routing number: 021000021
-    2. Enter account number: 12345678
-    3. Leave re-enter account number blank
-    4. Enter owner name
-    5. Click CONTINUE
-  Expected:
-    - Error "Please re-enter account number." visible
-    - Form does NOT submit
-
-TC-N-06: Owner first name missing
-  Entry point: GET /add-bank
-  Steps:
-    1. Fill routing number, account numbers correctly
-    2. Leave owner first name blank, enter last name only
-    3. Click CONTINUE
-  Expected:
-    - Error "Owner first and last name are required." visible
-    - First name field has invalid styling
-    - Form does NOT submit
-
-TC-N-07: Owner last name missing
-  Entry point: GET /add-bank
-  Steps:
-    1. Fill routing number, account numbers correctly
-    2. Enter first name only, leave last name blank
-    3. Click CONTINUE
-  Expected:
-    - Error "Owner first and last name are required." visible
-    - Last name field has invalid styling
-    - Form does NOT submit
-
-TC-N-08: Both owner names missing
-  Entry point: GET /add-bank
-  Steps:
-    1. Fill routing number and account numbers correctly
-    2. Leave both first and last name blank
-    3. Click CONTINUE
-  Expected:
-    - Error "Owner first and last name are required." visible
-    - Both name fields have invalid styling
-    - Form does NOT submit
-
-TC-N-09: All required fields blank — all errors shown simultaneously
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Click CONTINUE without filling in anything
-  Expected:
-    - Error for routing number: "Routing number is required."
-    - Error for account number: "Account number is required."
-    - Error for re-enter account number: "Please re-enter account number."
-    - Error for owner name: "Owner first and last name are required."
     - Page does NOT navigate away
+    - Error message "Routing number is required." appears below the routing field
+    - Routing number input is highlighted with red/invalid border
 
-TC-N-10: Access /authorize with non-existent draft ID
+TC-N-02: CONTINUE with routing number fewer than 9 digits
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 1234 (4 digits)
+    3. Fill all other required fields correctly
+    4. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Must be exactly 9 digits." appears below the routing field
+
+TC-N-03: CONTINUE with routing number more than 9 digits
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 1234567890 (10 digits)
+    3. Fill all other required fields correctly
+    4. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Must be exactly 9 digits." appears below the routing field
+
+TC-N-04: CONTINUE with routing number containing letters
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: ABCD12345
+    3. Fill all other required fields correctly
+    4. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Must be exactly 9 digits." appears (letters fail the digits-only check)
+
+TC-N-05: CONTINUE with account number blank
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021
+    3. Leave account number blank
+    4. Enter re-enter account number: 12345678
+    5. Enter owner first name: Test, last name: User
+    6. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Account number is required." appears below the account number field
+    - Account number field highlighted with invalid styling
+
+TC-N-06: CONTINUE with re-enter account number blank
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021
+    3. Enter account number: 12345678
+    4. Leave re-enter account number blank
+    5. Enter owner name
+    6. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Please re-enter account number." visible
+    - Re-enter field highlighted with invalid styling
+
+TC-N-07: CONTINUE with mismatched account numbers
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021
+    3. Enter account number: 12345678
+    4. Enter re-enter account number: 87654321
+    5. Enter owner first name: Test, last name: User
+    6. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Account numbers do not match." appears below the re-enter field
+    - Re-enter field highlighted with invalid styling
+
+TC-N-08: CONTINUE with owner first name blank
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021
+    3. Enter account number: 12345678, re-enter: 12345678
+    4. Leave first name blank, enter last name: User
+    5. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Owner first and last name are required." visible
+    - First name field highlighted with invalid styling
+
+TC-N-09: CONTINUE with owner last name blank
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021
+    3. Enter account number: 12345678, re-enter: 12345678
+    4. Enter first name: Test, leave last name blank
+    5. Click CONTINUE
+  Expected:
+    - Page does NOT navigate away
+    - Error "Owner first and last name are required." visible
+    - Last name field highlighted with invalid styling
+
+TC-N-10: CONTINUE with all required fields blank — all errors shown at once
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Click CONTINUE without entering anything
+  Expected:
+    - Page does NOT navigate away
+    - Error "Routing number is required." is visible
+    - Error "Account number is required." is visible
+    - Error "Please re-enter account number." is visible
+    - Error "Owner first and last name are required." is visible
+    - All four corresponding fields are highlighted with invalid styling
+
+TC-N-11: Correspondent routing number field cannot be manually edited
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 123456789 and tab away
+    3. Confirm correspondent routing number shows "021000021"
+    4. Click into the Correspondent routing number field and attempt to type "000000000"
+  Expected:
+    - Field does not accept the typed input (it is read-only)
+    - Field value remains "021000021"
+
+TC-N-12: Correspondent account number field cannot be manually edited
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 123456789 and tab away
+    3. Confirm correspondent account number shows "8675309001"
+    4. Click into the Correspondent account number field and attempt to type new text
+  Expected:
+    - Field does not accept typed input (it is read-only)
+    - Field value remains "8675309001"
+
+TC-N-13: Navigate to /authorize with an invalid draft ID shows error
+  URL:    /authorize/draft_does_not_exist
   Steps:
     1. Navigate to /authorize/draft_does_not_exist
   Expected:
-    - HTTP 404 response
-    - Page body contains "Draft not found"
-    - No Python traceback or 500 error
+    - Page shows "Draft not found" message
+    - No server error or stack trace is displayed
+    - HTTP status is 404
 
-TC-N-11: Access /review with non-existent draft ID
+TC-N-14: Navigate to /review with an invalid draft ID shows error
+  URL:    /review/draft_does_not_exist
   Steps:
     1. Navigate to /review/draft_does_not_exist
   Expected:
-    - HTTP 404 response
-    - Page body contains "Draft not found"
+    - Page shows "Draft not found" message
+    - No server error or stack trace is displayed
+    - HTTP status is 404
 
-TC-N-12: Routing number lookup with non-9-digit value does NOT fire API call
-  Entry point: GET /add-bank
+TC-N-15: Routing number shorter than 9 digits does not trigger bank name lookup
+  URL:    /add-bank
   Steps:
     1. Navigate to /add-bank
     2. Enter "12345" (5 digits) in the routing number field
     3. Tab away from the field
   Expected:
-    - No network request made to /routing-lookup
-    - Bank name field stays at "--"
-    - No JavaScript error in the console
-
-TC-N-13: Correspondent fields are read-only and cannot be manually edited
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Enter routing number: 123456789, tab away
-    3. Attempt to type into the Correspondent routing number field
-    4. Attempt to type into the Correspondent account number field
-  Expected:
-    - Both correspondent fields are read-only; typed input is rejected
-    - Values remain as populated from the routing lookup
-
-TC-N-14: Routing number with letters triggers validation error
-  Entry point: GET /add-bank
-  Steps:
-    1. Navigate to /add-bank
-    2. Enter "ABCD12345" in routing number
-    3. Fill remaining required fields correctly
-    4. Click CONTINUE
-  Expected:
-    - Error "Must be exactly 9 digits." visible (non-digit characters fail the regex)
-    - Form does NOT submit
-
-TC-N-15: Success page with no bc_id parameter shows no Bank Connection ID
-  Steps:
-    1. Navigate to /success/ (no ID) or /success/nonexistent
-  Expected:
-    - Page loads without error (no 500)
-    - Success content is shown
-    - Bank Connection ID line is absent (Jinja `{% if bc_id %}` is false)
+    - Bank name display stays at "--" (lookup is not triggered)
+    - No error is shown on the page at this point
+    - Form remains interactive
 
 --------------------------------------------------------------------------------
-SECTION 7: API ENDPOINTS SUMMARY (for direct API test cases)
+SECTION 7: EDGE TEST CASES
 --------------------------------------------------------------------------------
 
-GET  /routing-lookup?routingNumber=<9digits>
-  200: { bankName, correspondentRoutingNumber, correspondentAccountNumber }
-  404: { bankName: null } — unknown routing number
+TC-E-01: Switching routing numbers updates bank name and correspondent fields
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 123456789 and tab away
+    3. Confirm bank name shows "Y Bank Test" and correspondent fields are populated
+    4. Clear the routing number field and enter: 021000021, then tab away
+  Expected:
+    - Bank name updates to "JPMorgan Chase Bank"
+    - Correspondent routing number field becomes empty
+    - Correspondent account number field becomes empty
 
-POST /bff/bank-connections/draft
-  Body: { routingNumber, accountNumber, accountType, owners:[{firstName,lastName}],
-          nickname?, makePrimary?, correspondentRoutingNumber?, correspondentAccountNumber? }
-  201: { draftId, status:"DRAFT" }
+TC-E-02: Checking is the default account type selection
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+  Expected:
+    - "Checking" radio button is selected by default
+    - "Savings" radio button is not selected
 
-PUT  /bff/bank-connections/draft/<draftId>
-  Body: any subset of draft fields
-  200: { draftId, status:"DRAFT" }
+TC-E-03: Account type toggles correctly between Checking and Savings
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Confirm Checking is selected by default
+    3. Click the Savings radio button
+  Expected:
+    - Savings is now selected
+    - Checking is now deselected
+    4. Click the Checking radio button
+  Expected:
+    - Checking is selected again
+    - Savings is deselected
 
-GET  /bff/bank-connections/draft/<draftId>/authorize
-  200: { bankInformation:{...}, autoAuthorizedAccounts:[...], eligibleAdditionalAccounts:[...] }
-  404: { error:"Draft not found" }
+TC-E-04: "Make this your primary bank" checkbox is checked by default and can be unchecked
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+  Expected:
+    - "Make this your primary bank" checkbox is checked by default
+    2. Uncheck it
+  Expected:
+    - Checkbox is unchecked
+    3. Check it again
+  Expected:
+    - Checkbox is checked again
 
-POST /bff/bank-connections/draft/<draftId>/authorizations
-  Body: { authorizedVanguardAccounts: [<vaId>, ...] }
-  200: { draftId, authorizedVanguardAccounts:[...] }
+TC-E-05: Nickname field is optional — form submits without it
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 021000021 and tab away
+    3. Enter account number: 11223344, re-enter: 11223344
+    4. Enter owner first name: Test, last name: User
+    5. Leave nickname blank
+    6. Click CONTINUE
+  Expected:
+    - Form submits successfully (no error for blank nickname)
+    - Browser navigates to /authorize/<id>
 
-GET  /bff/bank-connections/draft/<draftId>/review
-  200: { bankInformation:{...}, authorizedAccounts:[...], primaryBank, verificationMethod }
-  404: { error:"Draft not found" }
+TC-E-06: Review page does not show Bank nickname row when nickname was left blank
+  Steps:
+    1. Complete the steps from TC-E-05 through to the review page
+    2. Click REVIEW on the authorize page
+  Expected:
+    - Review page bank information table does NOT contain a "Bank nickname" row
 
-POST /bff/bank-connections/draft/<draftId>/submit
-  201: { bankConnectionId, status:"PENDING_VERIFICATION" }
-  404: { error:"Draft not found" }
+TC-E-07: Suffix dropdown displays all expected options
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Click the Suffix dropdown in the owner section
+  Expected:
+    - Dropdown contains: --, Mr., Mrs., Ms., Miss, Dr., Prof., Jr., Sr., II, III
+
+TC-E-08: Authorize page with correspondent routing and account numbers displays them in the table
+  URL:    /authorize/draft_001
+  Steps:
+    1. Navigate to /authorize/draft_001
+  Expected:
+    - Bank information table contains a "Correspondent routing number" row with "021000021"
+    - Bank information table contains a "Correspondent account number" row with "8675309001"
+
+TC-E-09: Authorize page without correspondent does not show correspondent rows
+  URL:    /authorize/draft_002
+  Steps:
+    1. Navigate to /authorize/draft_002
+  Expected:
+    - Bank information table does NOT contain a "Correspondent routing number" row
+    - Bank information table does NOT contain a "Correspondent account number" row
+
+TC-E-10: Navigating to success page with a known bc_id shows the ID
+  URL:    /success/bc_90001
+  Steps:
+    1. Navigate to /success/bc_90001
+  Expected:
+    - "Bank Connection ID: bc_90001" is displayed on the page
+
+TC-E-11: Navigating to success page with an arbitrary ID still shows the success screen
+  URL:    /success/bc_test123
+  Steps:
+    1. Navigate to /success/bc_test123
+  Expected:
+    - Success page loads without error
+    - Green checkmark and "Entry submitted successfully" are displayed
+    - "Bank Connection ID: bc_test123" is displayed
+
+TC-E-12: Validation errors clear when the user corrects the input and clicks CONTINUE
+  URL:    /add-bank
+  Steps:
+    1. Navigate to /add-bank
+    2. Click CONTINUE without any input to trigger all validation errors
+    3. Enter routing number: 021000021 and tab away
+    4. Enter account number: 12345678
+    5. Enter re-enter account number: 12345678
+    6. Enter owner first name: Test, last name: User
+    7. Click CONTINUE
+  Expected:
+    - All validation error messages are gone
+    - Form submits and browser navigates to /authorize/<id>
+
+TC-E-13: Full journey for a non-managed account shows no Managed badge end-to-end
+  Steps:
+    1. Navigate to /add-bank
+    2. Enter routing number: 026009593, tab away (Citibank)
+    3. Enter account number: 99001122, re-enter: 99001122
+    4. Enter owner first name: Daniel, last name: Chen
+    5. Click CONTINUE
+  Expected:
+    - Authorize page shows Individual Brokerage in auto-authorized section
+    - "(Managed)" does NOT appear for this account
+    6. Click REVIEW
+  Expected:
+    - Review page authorized accounts section shows Individual Brokerage
+    - "(Managed)" does NOT appear for this account
+
+TC-E-14: Visiting the landing page mid-flow and then continuing resumes correctly
+  Steps:
+    1. Navigate to /authorize/draft_001
+    2. Note the draft ID in the URL
+    3. Navigate to /
+    4. Click CONTINUE → navigate back to /add-bank
+    5. Open the original authorize URL: /authorize/draft_001
+  Expected:
+    - /authorize/draft_001 still loads correctly with all the same data
+    - No session or state corruption from visiting the landing page
+
+TC-E-15: Primary bank toggle shows correctly on review for both states
+  Steps:
+    1. Navigate to /review/draft_001 (Primary: Yes)
+  Expected:
+    - Primary bank row shows "Yes"
+    2. Navigate to /review/draft_002 (Primary: No)
+  Expected:
+    - Primary bank row shows "No"
 
 --------------------------------------------------------------------------------
 SECTION 8: NOTES FOR KANEAI TEST GENERATION
 --------------------------------------------------------------------------------
 
-1. All browser-based tests should use the LT Tunnel URL as the base URL.
+1. Base URL for all tests:
+   https://vanguard-bank-connection-demo-production.up.railway.app
+   No LT Tunnel or local setup is required.
 
-2. The database is file-based (data.xlsx). To keep tests independent, prefer
-   using the pre-seeded draft IDs (draft_001 through draft_005) for read-only
-   steps. For end-to-end submission tests, delete data.xlsx before each run
-   to reset to seed state.
+2. The hosted database resets to seed data on each Railway deployment.
+   Pre-seeded draft IDs draft_001 through draft_005 are always available.
+   For end-to-end tests that submit (TC-P-04, TC-P-05, TC-P-13), the draft
+   is consumed after submit; re-deploy or use a freshly created draft for
+   repeat runs.
 
-3. The app has no authentication layer. All routes are publicly accessible.
+3. The app has no authentication. All pages are publicly accessible.
 
-4. Client-side validation fires on the CONTINUE button click. All validation
-   errors listed in Section 6 are rendered in the DOM without a page reload.
+4. Validation errors on the Add Bank page fire on the CONTINUE button click
+   and are rendered in the DOM without a full page reload. Assert error text
+   visibility in the same page context.
 
-5. After clicking REVIEW on the authorize page, the redirect to /review is
-   triggered by JavaScript after a successful API response. Allow for async
-   navigation in test assertions.
+5. After clicking REVIEW on the Authorize page and after clicking SUBMIT on
+   the Review page, navigation is JavaScript-driven (async). Allow sufficient
+   time for the redirect before asserting the destination page.
 
-6. After clicking SUBMIT on the review page, the redirect to /success/<bc_id>
-   is similarly JavaScript-driven. The bc_id in the URL is the newly created
-   bank connection ID (format: bc_ followed by 6 hex characters).
+6. The Bank Connection ID on the success page uses the format bc_<6 hex chars>
+   for new submissions. For pre-seeded records navigated directly, it may be
+   bc_90001 through bc_90005.
 
-7. The "API Calls" log panel at the bottom of add-bank and authorize pages
-   can be used in tests as a secondary assertion for which API calls were made.
+7. Correspondent routing and account number fields are read-only HTML inputs.
+   Verify with a readOnly attribute check or by confirming typing is rejected.
 
 ================================================================================
 END OF DOCUMENT

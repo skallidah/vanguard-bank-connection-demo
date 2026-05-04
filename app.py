@@ -25,9 +25,9 @@ def authorize(draft_id):
     routing = db.get_routing(draft.get("routingNumber", ""))
 
     def enrich(entry):
-        va = db.get_vanguard_account(entry["vanguardAccountId"])
+        va = db.get_demo_account(entry["demoAccountId"])
         return {
-            "vanguardAccountId": entry["vanguardAccountId"],
+            "demoAccountId": entry["demoAccountId"],
             "accountName": va["accountName"] if va else "",
             "managed": va["managed"] if va else False,
             "ownershipMatch": entry.get("ownershipMatch", "NON_IDENTICAL")
@@ -47,7 +47,7 @@ def authorize(draft_id):
         "correspondentRoutingNumber": routing.get("correspondentRoutingNumber") if routing else None,
         "correspondentAccountNumber": routing.get("correspondentAccountNumber") if routing else None,
     }
-    auto_ids = [a["vanguardAccountId"] for a in auto]
+    auto_ids = [a["demoAccountId"] for a in auto]
     return render_template("authorize.html", draft_id=draft_id, info=info,
                            auto_accounts=auto, eligible_accounts=eligible, auto_ids=auto_ids)
 
@@ -58,15 +58,15 @@ def review(draft_id):
         return "Draft not found", 404
     selection = db.get_draft_selection(draft_id)
     routing = db.get_routing(draft.get("routingNumber", ""))
-    va_ids = (selection.get("authorizedVanguardAccounts") or []) if selection else []
+    va_ids = (selection.get("authorizedAccounts") or []) if selection else []
     owners = draft.get("owners") or []
     owner_names = [f"{o.get('firstName','')} {o.get('lastName','')}".strip() for o in owners if isinstance(o, dict)]
 
     authorized = []
     for va_id in va_ids:
-        va = db.get_vanguard_account(va_id)
+        va = db.get_demo_account(va_id)
         if va:
-            authorized.append({"vanguardAccountId": va_id, "accountName": va["accountName"], "managed": va["managed"]})
+            authorized.append({"demoAccountId": va_id, "accountName": va["accountName"], "managed": va["managed"]})
 
     info = {
         "bankName": routing["bankName"] if routing else draft.get("bankName", ""),

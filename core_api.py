@@ -28,7 +28,7 @@ def create_bank_connection():
 @core.post("/bank-connections/<bc_id>/authorizations")
 def create_authorizations(bc_id):
     body = request.json
-    va_ids = body.get("vanguardAccountIds", [])
+    va_ids = body.get("accountIds", [])
     db.create_bank_authorizations(bc_id, va_ids)
     return jsonify({"bankConnectionId": bc_id, "authorizedAccounts": va_ids}), 200
 

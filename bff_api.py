@@ -61,9 +61,9 @@ def get_authorize(draft_id):
     routing = db.get_routing(draft.get("routingNumber", ""))
 
     def enrich(entry):
-        va = db.get_vanguard_account(entry["vanguardAccountId"])
+        va = db.get_demo_account(entry["demoAccountId"])
         return {
-            "vanguardAccountId": entry["vanguardAccountId"],
+            "demoAccountId": entry["demoAccountId"],
             "accountName": va["accountName"] if va else "",
             "managed": va["managed"] if va else False,
             "ownershipMatch": entry.get("ownershipMatch", "NON_IDENTICAL")
@@ -90,9 +90,9 @@ def get_authorize(draft_id):
 @bff.post("/bff/bank-connections/draft/<draft_id>/authorizations")
 def save_authorizations(draft_id):
     body = request.json
-    accounts = body.get("authorizedVanguardAccounts", [])
+    accounts = body.get("authorizedAccounts", [])
     db.save_draft_selection(draft_id, accounts)
-    return jsonify({"draftId": draft_id, "authorizedVanguardAccounts": accounts}), 200
+    return jsonify({"draftId": draft_id, "authorizedAccounts": accounts}), 200
 
 # GET /bff/bank-connections/draft/<draftId>/review
 @bff.get("/bff/bank-connections/draft/<draft_id>/review")
@@ -103,14 +103,14 @@ def get_review(draft_id):
 
     selection = db.get_draft_selection(draft_id)
     routing = db.get_routing(draft.get("routingNumber", ""))
-    va_ids = selection.get("authorizedVanguardAccounts") or [] if selection else []
+    va_ids = selection.get("authorizedAccounts") or [] if selection else []
 
     authorized = []
     for va_id in va_ids:
-        va = db.get_vanguard_account(va_id)
+        va = db.get_demo_account(va_id)
         if va:
             authorized.append({
-                "vanguardAccountId": va_id,
+                "demoAccountId": va_id,
                 "accountName": va["accountName"],
                 "managed": va["managed"]
             })
@@ -136,7 +136,7 @@ def submit_draft(draft_id):
         return jsonify({"error": "Draft not found"}), 404
 
     selection = db.get_draft_selection(draft_id)
-    va_ids = selection.get("authorizedVanguardAccounts") or [] if selection else []
+    va_ids = selection.get("authorizedAccounts") or [] if selection else []
 
     # 1. Create bank connection (core)
     conn_payload = {
@@ -154,7 +154,7 @@ def submit_draft(draft_id):
 
     # 2. Create authorizations (core)
     http.post(_safe_core_url(f"/bank-connections/{bc_id}/authorizations"),
-              json={"vanguardAccountIds": va_ids})
+              json={"accountIds": va_ids})
 
     # 3. Initiate micro-deposits (core)
     http.post(_safe_core_url(f"/bank-connections/{bc_id}/micro-deposits"))

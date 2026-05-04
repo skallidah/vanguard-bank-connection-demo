@@ -171,16 +171,16 @@ components:
         autoAuthorizedAccounts:
           type: array
           items:
-            $ref: '#/components/schemas/VanguardAccount'
+            $ref: '#/components/schemas/DemoAccount'
         eligibleAdditionalAccounts:
           type: array
           items:
-            $ref: '#/components/schemas/VanguardAccount'
+            $ref: '#/components/schemas/DemoAccount'
 
     AuthorizationSelection:
       type: object
       properties:
-        authorizedVanguardAccounts:
+        authorizedAccounts:
           type: array
           items:
             type: string
@@ -193,7 +193,7 @@ components:
         authorizedAccounts:
           type: array
           items:
-            $ref: '#/components/schemas/VanguardAccount'
+            $ref: '#/components/schemas/DemoAccount'
         primaryBank:
           type: boolean
         verificationMethod:
@@ -238,10 +238,10 @@ components:
           items:
             type: string
 
-    VanguardAccount:
+    DemoAccount:
       type: object
       properties:
-        vanguardAccountId:
+        demoAccountId:
           type: string
         accountName:
           type: string

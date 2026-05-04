@@ -29,7 +29,7 @@
         <p class="text-small">These accounts will be immediately authorized for use because the ownership is identical to your bank account.</p>
         <div style="margin-left: 200px; font-size: 13px; line-height: 1.6;">
             {% for a in auto_accounts %}
-                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.vanguardAccountId }}{% if a.managed %} (Managed){% endif %}<br>
+                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.demoAccountId }}{% if a.managed %} (Managed){% endif %}<br>
             {% else %}
                 <em>No auto-authorized accounts.</em>
             {% endfor %}
@@ -39,7 +39,7 @@
         <p class="text-small">The following account(s) don't have identical ownership to the bank account you're adding but are eligible for use after further authorization.</p>
         <div style="margin-left: 200px; font-size: 13px; line-height: 1.6;">
             {% for a in eligible_accounts %}
-                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.vanguardAccountId }}{% if a.managed %} (Managed){% endif %}<br>
+                {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.demoAccountId }}{% if a.managed %} (Managed){% endif %}<br>
             {% else %}
                 <em>No eligible additional accounts.</em>
             {% endfor %}
@@ -74,7 +74,7 @@
             fetch(postPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ authorizedVanguardAccounts: autoIds })
+                body: JSON.stringify({ authorizedAccounts: autoIds })
             })
             .then(r => r.json())
             .then(data => {

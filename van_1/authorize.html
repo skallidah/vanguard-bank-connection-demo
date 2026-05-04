@@ -72,12 +72,12 @@
 
                 const autoDiv = document.getElementById('autoAccounts');
                 (data.autoAuthorizedAccounts || []).forEach(a => {
-                    autoDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.vanguardAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
+                    autoDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.demoAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
                 });
 
                 const eligibleDiv = document.getElementById('eligibleAccounts');
                 (data.eligibleAdditionalAccounts || []).forEach(a => {
-                    eligibleDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.vanguardAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
+                    eligibleDiv.innerHTML += (info.owners || []).join(', ') + '\u2014' + a.accountName + '\u2014' + a.demoAccountId + (a.managed ? ' (Managed)' : '') + '<br>';
                 });
             })
             .catch(() => {});
@@ -89,7 +89,7 @@
             fetch(postPath, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ authorizedVanguardAccounts: ['VA_80001'] })
+                body: JSON.stringify({ authorizedAccounts: ['VA_80001'] })
             })
             .then(r => r.json())
             .then(data => {

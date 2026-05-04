@@ -1,31 +1,31 @@
 ================================================================================
 PRODUCT REQUIREMENTS DOCUMENT
-Vanguard Bank Connection Demo — KaneAI End-to-End Test Generation
+Demo Bank Connection — KaneAI End-to-End Test Generation
 ================================================================================
 
 DOCUMENT PURPOSE
 ----------------
-This PRD describes the single end-to-end UI flow for the Vanguard Bank
+This PRD describes the single end-to-end UI flow for the Demo Bank
 Connection Demo app. It is written for LambdaTest KaneAI to generate one
 positive test scenario covering the complete user journey from landing to
 successful bank account submission.
 
   App URL:  https://vanguard-bank-connection-demo-production.up.railway.app
-  GitHub:   https://github.com/skallidah/vanguard-bank-connection-demo
+  GitHub:   https://github.com/skallidah/demo-bank-connection
 
 --------------------------------------------------------------------------------
 SECTION 1: APPLICATION OVERVIEW
 --------------------------------------------------------------------------------
 
-The Vanguard Bank Connection Demo simulates the bank account linking flow from
-vanguard.com. A customer connects an external bank account to their Vanguard
+The Demo Bank Connection simulates the bank account linking flow from
+demo-app.com. A customer connects an external bank account to their Demo-App
 investment accounts through a 4-step guided UI. At the end, the system confirms
 the connection and initiates micro-deposit verification.
 
 User journey:
   Step 1 — Landing page       (/):               Read intro, click CONTINUE
   Step 2 — Add Bank form      (/add-bank):        Enter bank and owner details
-  Step 3 — Authorize Accounts (/authorize/<id>):  Confirm which Vanguard accounts are linked
+  Step 3 — Authorize Accounts (/authorize/<id>):  Confirm which investment accounts are linked
   Step 4 — Review             (/review/<id>):     Review summary and submit
   Step 5 — Success            (/success/<id>):    Confirmation with Bank Connection ID
 
@@ -58,7 +58,7 @@ SCENARIO: Connect a new bank account — full happy path
     1. Open https://vanguard-bank-connection-demo-production.up.railway.app/
     Expected:
       - Page heading "Connect your bank account" is visible
-      - "Vanguard" logo is displayed
+      - "Demo-App" logo is displayed
       - A 4-step ordered list describing the micro-deposit process is visible
       - A CONTINUE button is present
     2. Click CONTINUE

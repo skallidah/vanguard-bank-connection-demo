@@ -4,7 +4,7 @@ from pathlib import Path
 DB_FILE = Path(__file__).parent / "data.xlsx"
 MOCK_FILE = Path(__file__).parent / "mock-db.json"
 
-SHEETS = ["customers", "vanguardAccounts", "routingDirectory",
+SHEETS = ["customers", "demoAccounts", "routingDirectory",
           "bankConnectionDrafts", "draftAuthorizations",
           "draftAuthorizationSelections", "bankConnections",
           "bankAuthorizations", "microDeposits"]
@@ -78,8 +78,8 @@ def get_draft_auth(draft_id):
 def get_draft_selection(draft_id):
     return next((r for r in _sheet_rows("draftAuthorizationSelections") if r["draftId"] == draft_id), None)
 
-def get_vanguard_account(va_id):
-    return next((r for r in _sheet_rows("vanguardAccounts") if r["vanguardAccountId"] == va_id), None)
+def get_demo_account(va_id):
+    return next((r for r in _sheet_rows("demoAccounts") if r["demoAccountId"] == va_id), None)
 
 def get_customer(customer_id):
     return next((r for r in _sheet_rows("customers") if r["customerId"] == customer_id), None)
@@ -108,7 +108,7 @@ def save_draft_selection(draft_id, accounts):
     rows = _sheet_rows("draftAuthorizationSelections")
     existing = next((r for r in rows if r["draftId"] == draft_id), None)
     if existing:
-        _update_row("draftAuthorizationSelections", "draftId", draft_id, {"authorizedVanguardAccounts": accounts})
+        _update_row("draftAuthorizationSelections", "draftId", draft_id, {"authorizedAccounts": accounts})
     else:
         wb = _wb()
         ws = wb["draftAuthorizationSelections"]
@@ -117,14 +117,14 @@ def save_draft_selection(draft_id, accounts):
 
 def create_draft_auth(draft_id, draft_owners):
     draft_owner_names = {(o.get('firstName','').lower(), o.get('lastName','').lower()) for o in draft_owners}
-    all_vas = _sheet_rows("vanguardAccounts")
+    all_vas = _sheet_rows("demoAccounts")
     auto, eligible = [], []
     for va in all_vas:
         va_owners = {(o.get('firstName','').lower(), o.get('lastName','').lower()) for o in (va.get('owners') or [])}
         if va_owners and va_owners == draft_owner_names:
-            auto.append({"vanguardAccountId": va["vanguardAccountId"], "ownershipMatch": "IDENTICAL"})
+            auto.append({"demoAccountId": va["demoAccountId"], "ownershipMatch": "IDENTICAL"})
         elif va_owners & draft_owner_names:
-            eligible.append({"vanguardAccountId": va["vanguardAccountId"], "ownershipMatch": "NON_IDENTICAL"})
+            eligible.append({"demoAccountId": va["demoAccountId"], "ownershipMatch": "NON_IDENTICAL"})
     wb = _wb()
     ws = wb["draftAuthorizations"]
     ws.append([draft_id, json.dumps(auto), json.dumps(eligible)])

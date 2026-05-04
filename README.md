@@ -1,9 +1,9 @@
-# Vanguard Bank Connection Demo
+# Demo Bank Connection
 
-A prototype of Vanguard's bank account connection flow. Users enter their bank details, authorize which Vanguard accounts to link, review the summary, and submit — triggering a simulated micro-deposit verification.
+A prototype of a bank account connection flow. Users enter their bank details, authorize which investment accounts to link, review the summary, and submit — triggering a simulated micro-deposit verification.
 
 **Live demo:** https://vanguard-bank-connection-demo-production.up.railway.app
-**GitHub:** https://github.com/skallidah/vanguard-bank-connection-demo
+**GitHub:** https://github.com/skallidah/demo-bank-connection
 
 ## Architecture
 
@@ -20,8 +20,8 @@ Browser → UI Routes (app.py)
 ```
 
 - **BFF API** (`/bff/...`) manages draft creation, authorization selection, and final submission. On submit it calls the Core API internally via HTTP.
-- **Core API** (`/bank-connections/...`) records the bank connection, authorizes Vanguard accounts, and initiates micro-deposits.
-- **Database** is an Excel workbook (`data.xlsx`) seeded on first run from `mock-db.json`. Sheets: customers, vanguardAccounts, routingDirectory, bankConnectionDrafts, draftAuthorizations, draftAuthorizationSelections, bankConnections, bankAuthorizations, microDeposits.
+- **Core API** (`/bank-connections/...`) records the bank connection, authorizes investment accounts, and initiates micro-deposits.
+- **Database** is an Excel workbook (`data.xlsx`) seeded on first run from `mock-db.json`. Sheets: customers, demoAccounts, routingDirectory, bankConnectionDrafts, draftAuthorizations, draftAuthorizationSelections, bankConnections, bankAuthorizations, microDeposits.
 
 ## Setup (Local)
 
@@ -58,7 +58,7 @@ FLASK_DEBUG=true python app.py
 |------|-----|-------------|
 | 1 | `/` | Landing page explaining the micro-deposit process |
 | 2 | `/add-bank` | Enter routing number, account number, account type, and owner info |
-| 3 | `/authorize/<draft_id>` | Review which Vanguard accounts are linked to this bank |
+| 3 | `/authorize/<draft_id>` | Review which investment accounts are linked to this bank |
 | 4 | `/review/<draft_id>` | Review all details before submitting |
 | 5 | `/success/<bc_id>` | Confirmation page with the new bank connection ID |
 
@@ -117,7 +117,7 @@ The app is deployed on [Railway](https://railway.com) from the `main` branch of 
 To redeploy after pushing changes:
 
 ```bash
-git push origin main   # Railway auto-deploys on push if connected
+git push origin main
 # or manually:
 railway up
 ```
@@ -126,13 +126,7 @@ The `PORT` environment variable is set automatically by Railway. The database (`
 
 ## KaneAI Testing
 
-See `PRD.txt` for the full test specification including positive and negative test cases.
-
-**LT Tunnel setup for KaneAI (local testing):**
-
-```bash
-./LT --user <LT_USERNAME> --key <LT_ACCESS_KEY> --tunnel-name vanguard-demo
-```
+See `PRD.txt` for the full test specification including the end-to-end test scenario.
 
 For the hosted version, point KaneAI directly at:
 `https://vanguard-bank-connection-demo-production.up.railway.app`

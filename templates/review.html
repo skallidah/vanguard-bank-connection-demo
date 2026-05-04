@@ -44,7 +44,7 @@
             <div class="bordered-section-header">Accounts authorized to use this bank</div>
             <div class="text-small" style="line-height: 1.6;">
                 {% for a in authorized_accounts %}
-                    {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.vanguardAccountId }}{% if a.managed %} (Managed){% endif %}<br>
+                    {{ info.owners | join(', ') }}—{{ a.accountName }}—{{ a.demoAccountId }}{% if a.managed %} (Managed){% endif %}<br>
                 {% else %}
                     <em>No authorized accounts.</em>
                 {% endfor %}
